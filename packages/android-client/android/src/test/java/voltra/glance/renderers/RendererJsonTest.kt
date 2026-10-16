@@ -62,17 +62,17 @@ class RendererJsonTest {
     }
 
     @Test
-    fun parsesAColorStringList() {
-        assertEquals(listOf("#ff0000", "~p"), parseColorStringList("""["#ff0000","~p"]"""))
-        assertEquals(emptyList<String>(), parseColorStringList("[]"))
+    fun parsesAColorValueList() {
+        assertEquals(listOf("#ff0000", "~p"), parseColorValueList("""["#ff0000","~p"]"""))
+        assertEquals(emptyList<String>(), parseColorValueList("[]"))
     }
 
     @Test
-    fun returnsNullForAnAbsentOrInvalidColorStringList() {
-        assertNull(parseColorStringList(null))
-        assertNull(parseColorStringList(""))
-        assertNull(parseColorStringList("["))
-        assertNull(parseColorStringList("""[1,2]"""))
+    fun returnsNullForAnAbsentOrInvalidColorValueList() {
+        assertNull(parseColorValueList(null))
+        assertNull(parseColorValueList(""))
+        assertNull(parseColorValueList("["))
+        assertNull(parseColorValueList("""[1,2]"""))
     }
 
     @Test

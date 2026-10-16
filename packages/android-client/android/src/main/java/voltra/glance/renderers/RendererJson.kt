@@ -7,6 +7,7 @@ import kotlinx.serialization.SerializationException
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import voltra.parsing.toDynamicObject
@@ -90,13 +91,7 @@ internal fun parseForegroundStyleScaleEntries(json: String?): List<List<Any>>? {
         entries.map { entry ->
             val elements =
                 entry as? JsonArray ?: throw SerializationException("Expected a [series, color] entry, got $entry")
-            elements.map { element ->
-                when {
-                    element is JsonObject -> element.toDynamicObject()
-                    element is JsonPrimitive && element.isString -> element.content
-                    else -> throw SerializationException("Expected a string or a { day, night } object, got $element")
-                }
-            }
+            elements.map(::decodeStringOrPair)
         }
     } catch (error: Exception) {
         warn("Failed to parse foregroundStyleScale", error)
@@ -109,24 +104,30 @@ internal fun parseForegroundStyleScaleEntries(json: String?): List<List<Any>>? {
  * is a color string or a `{ day, night }` pair, returned as a `String` or a `Map` ready for
  * `JSColorParser.parse`. Any other element fails the whole list.
  */
-internal fun parseColorStringList(json: String?): List<Any>? {
+internal fun parseColorValueList(json: String?): List<Any>? {
     if (json.isNullOrEmpty()) return null
     return try {
         val array =
             rendererJson.parseToJsonElement(json) as? JsonArray
                 ?: throw SerializationException("Expected a JSON array of colors")
-        array.map { element ->
-            when {
-                element is JsonObject -> element.toDynamicObject()
-                element is JsonPrimitive && element.isString -> element.content
-                else -> throw SerializationException("Expected a color string or a { day, night } object, got $element")
-            }
-        }
+        array.map(::decodeStringOrPair)
     } catch (error: Exception) {
         warn("Failed to parse color list", error)
         null
     }
 }
+
+/**
+ * Decodes one element of a JSON-encoded color list: a string stays a `String` and a `{ day, night }`
+ * object becomes a `Map`, both ready for `JSColorParser.parse`. Anything else throws, so the caller
+ * fails the whole list.
+ */
+private fun decodeStringOrPair(element: JsonElement): Any =
+    when {
+        element is JsonObject -> element.toDynamicObject()
+        element is JsonPrimitive && element.isString -> element.content
+        else -> throw SerializationException("Expected a string or a { day, night } object, got $element")
+    }
 
 internal fun parseMarksTuples(marksJson: String): List<List<Any?>> {
     return try {
