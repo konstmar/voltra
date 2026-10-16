@@ -58,7 +58,7 @@ Your widget's JavaScript produces the same output in both themes; Android picks 
 
 - Each side takes any literal color the string form accepts: hex with or without alpha (`#fff`, `#ffffff80`), `rgb()`/`rgba()`, `hsl()`/`hsla()`, color names and `transparent`. Alpha is kept per side.
 - Both `day` and `night` are required. Other keys are ignored.
-- `AndroidDynamicColors.*` tokens are not allowed inside a pair. TypeScript does not catch a token in a style pair; it is rejected when the widget renders.
+- `AndroidDynamicColors.*` tokens are not allowed inside a pair. TypeScript does not catch a token inside a pair in a style or a component color prop; the pair is rejected when the widget renders.
 - An invalid pair (a missing or empty side, a token, or a value that isn't a color) is dropped as a whole with one warning in Logcat, and the property falls back to its default, as an unparsable color string does.
 - `borderColor` and `shadowColor` accept pairs too, but borders and shadows are not drawn yet.
 - Component color props take pairs as well: `Text` `color`, `Image` `tintColor`/`colorFilter`, the button, `Switch`, `CheckBox` and `RadioButton` colors, the progress indicator colors, and the `TitleBar` and `Scaffold` colors. A `Text` `color` prop wins over the style's `color`.
