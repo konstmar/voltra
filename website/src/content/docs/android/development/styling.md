@@ -63,6 +63,7 @@ Your widget's JavaScript produces the same output in both themes; Android picks 
 - `borderColor` and `shadowColor` accept pairs too, but borders and shadows are not drawn yet.
 - Component color props take pairs as well: `Text` `color`, `Image` `tintColor`/`colorFilter`, the button, `Switch`, `CheckBox` and `RadioButton` colors, the progress indicator colors, and the `TitleBar` and `Scaffold` colors. A `Text` `color` prop wins over the style's `color`.
 - Gradients follow the theme too, either through tokens in their stops or as a pair of whole gradients. See [Gradients in light and dark](#gradients-in-light-and-dark).
+- Charts accept pairs for mark colors and `foregroundStyleScale` values. See [Charts](/android/charts#colors-in-light-and-dark).
 
 ### Image Specific
 
