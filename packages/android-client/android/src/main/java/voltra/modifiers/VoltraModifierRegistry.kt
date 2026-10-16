@@ -10,6 +10,7 @@ import voltra.parsing.toDynamicObject
 import voltra.styling.JSColorParser
 import voltra.styling.VoltraColorValue
 import voltra.styling.VoltraThemeColorRole
+import voltra.styling.toColorProvider
 
 /**
  * One entry of a component's `modifiers` prop: `{ "$type": "<name>", ...params }` (ADR 0005).
@@ -43,12 +44,7 @@ class VoltraModifierScope(
     private val resolveThemeColor: (VoltraThemeColorRole) -> ColorProvider,
 ) {
     /** A pair is unreachable from payloads today: `requiredColor` takes strings only. */
-    fun colorProvider(value: VoltraColorValue): ColorProvider =
-        when (value) {
-            is VoltraColorValue.Static -> ColorProvider(value.color)
-            is VoltraColorValue.Dynamic -> resolveThemeColor(value.role)
-            is VoltraColorValue.DayNight -> androidx.glance.color.ColorProvider(day = value.day, night = value.night)
-        }
+    fun colorProvider(value: VoltraColorValue): ColorProvider = value.toColorProvider(resolveThemeColor)
 
     fun mayCarryAppWidgetBackground(): Boolean = mayCarryAppWidgetBackground.invoke()
 

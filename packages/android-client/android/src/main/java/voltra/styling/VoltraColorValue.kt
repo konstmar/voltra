@@ -97,14 +97,20 @@ fun VoltraThemeColorRole.toColorProvider(colors: ColorProviders): ColorProvider 
         VoltraThemeColorRole.WIDGET_BACKGROUND -> colors.widgetBackground
     }
 
-/**
- * A pair maps to Glance's public day/night provider: from Android 12 the launcher receives both
- * colors and swaps them itself; below that Glance picks a side when the widget is composed.
- */
 @Composable
-fun VoltraColorValue.toColorProvider(): ColorProvider =
+fun VoltraColorValue.toColorProvider(): ColorProvider {
+    val themeColors = GlanceTheme.colors
+    return toColorProvider { role -> role.toColorProvider(themeColors) }
+}
+
+/**
+ * Maps to a provider outside composition, resolving a theme role with [resolveRole]. A pair maps to
+ * Glance's public day/night provider: from Android 12 the launcher receives both colors and swaps
+ * them itself; below that Glance picks a side when the widget is composed.
+ */
+fun VoltraColorValue.toColorProvider(resolveRole: (VoltraThemeColorRole) -> ColorProvider): ColorProvider =
     when (this) {
-        is VoltraColorValue.Dynamic -> role.toColorProvider()
+        is VoltraColorValue.Dynamic -> resolveRole(role)
         is VoltraColorValue.Static -> ColorProvider(color)
         is VoltraColorValue.DayNight -> androidx.glance.color.ColorProvider(day = day, night = night)
     }
