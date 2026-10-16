@@ -109,6 +109,14 @@ export default function AndroidClientDemoWidget(
         <VoltraAndroid.Box style={pairCard}>
           <VoltraAndroid.Text style={pairCardText}>day/night pair</VoltraAndroid.Text>
         </VoltraAndroid.Box>
+        {/* Component colour props take pairs too: this colour comes from Text's `color` prop. */}
+        <VoltraAndroid.Text
+          color={{ day: '#c62828', night: '#80cbc4' }}
+          style={{ fontSize: 10 }}
+          modifiers={[VoltraAndroid.modifiers.padding({ horizontal: 6 })]}
+        >
+          prop pair
+        </VoltraAndroid.Text>
       </VoltraAndroid.Row>
     </VoltraAndroid.Column>
   )
