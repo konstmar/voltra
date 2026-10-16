@@ -27,7 +27,7 @@ The following React Native style properties are supported on Android:
 ### Visual Style
 
 - `backgroundColor` - Background color (hex strings, color names, `AndroidDynamicColors.*` tokens, or a [`{ day, night }` pair](#day-and-night-colors)).
-- `backgroundImage` - CSS gradient background. Supports `linear-gradient(...)`, `radial-gradient(...)`, and `conic-gradient(...)`.
+- `backgroundImage` - CSS gradient background. Supports `linear-gradient(...)`, `radial-gradient(...)`, and `conic-gradient(...)`, or a [`{ day, night }` pair of gradients](#gradients-in-light-and-dark).
 - `borderRadius` - Corner radius in dp. **Note:** Requires Android 12+ (API 31). On older versions it is ignored, except on an `Image` with a fixed numeric `width` and `height`. On an `Image`, the radius rounds the image's box, not the picture inside it; see [Image](/android/components/visual#image).
 
 ### Text
@@ -62,6 +62,7 @@ Your widget's JavaScript produces the same output in both themes; Android picks 
 - An invalid pair (a missing or empty side, a token, or a value that isn't a color) is dropped as a whole with one warning in Logcat, and the property falls back to its default, as an unparsable color string does.
 - `borderColor` and `shadowColor` accept pairs too, but borders and shadows are not drawn yet.
 - Component color props take pairs as well: `Text` `color`, `Image` `tintColor`/`colorFilter`, the button, `Switch`, `CheckBox` and `RadioButton` colors, the progress indicator colors, and the `TitleBar` and `Scaffold` colors. A `Text` `color` prop wins over the style's `color`.
+- Gradients follow the theme too, either through tokens in their stops or as a pair of whole gradients. See [Gradients in light and dark](#gradients-in-light-and-dark).
 
 ### Image Specific
 
@@ -109,9 +110,39 @@ const element = (
 
 Supported gradient functions are `linear-gradient(...)`, `radial-gradient(...)`, and `conic-gradient(...)`. Repeating gradients, malformed gradients, unsupported color tokens, and invalid stop positions are ignored. If `backgroundColor` is also provided, Android paints it behind transparent gradient pixels and uses it as a fallback when a gradient cannot be rendered.
 
-Gradient stops can use Android dynamic color tokens from `AndroidDynamicColors`, but those colors are resolved into the generated bitmap when the widget renders or updates. Existing gradient bitmaps do not recolor until the widget is rendered again.
-
 Use `backgroundImage`, not `background-image`. Gradient bitmaps are generated natively during widget rendering and capped before being passed to Glance, so the bitmap does not control layout size.
+
+### Gradients in light and dark
+
+A gradient can follow the system theme in two ways:
+
+- **Tokens in the stops.** Stops accept `AndroidDynamicColors.*` tokens, so the gradient uses the theme's colors in each scheme. Stops do not take `{ day, night }` pairs, because a gradient is a single CSS string.
+- **A pair of whole gradients.** `backgroundImage` takes `{ day: '<css gradient>', night: '<css gradient>' }`, and Android draws the side for the current theme. The two sides can differ in anything: direction, kind, stops or stop count.
+
+```tsx
+import { AndroidDynamicColors, VoltraAndroid } from '@use-voltra/android'
+
+// Theme colors in the stops
+<VoltraAndroid.Box
+  style={{
+    backgroundImage: `linear-gradient(to right, ${AndroidDynamicColors.primary}, ${AndroidDynamicColors.tertiary})`,
+  }}
+/>
+
+// A different gradient per theme
+<VoltraAndroid.Box
+  style={{
+    backgroundImage: {
+      day: 'linear-gradient(to right, #e3f2fd, #90caf9)',
+      night: 'radial-gradient(circle at center, #1a237e, #000000)',
+    },
+  }}
+/>
+```
+
+Both sides are required, and each must be a gradient Android can draw. If either side is missing, empty or can't be parsed, the pair is dropped with one warning in Logcat, and `backgroundColor` shows instead, as it does for any gradient that can't be drawn.
+
+A gradient is drawn into a bitmap when the widget renders, in the colors of the theme at that moment, on every Android version. When the theme changes, Voltra redraws widgets while your app's process is alive; otherwise the gradient keeps the previous theme's colors until the widget's next update.
 
 ## Limitations
 
