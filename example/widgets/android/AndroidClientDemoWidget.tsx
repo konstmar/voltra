@@ -25,6 +25,16 @@ const pairCard: VoltraAndroidViewStyle = {
   borderRadius: 4,
 }
 const pairCardText: VoltraAndroidTextStyle = { fontSize: 10, color: { day: '#5d4037', night: '#ffe082' } }
+// A whole gradient per scheme: Android draws the side for the current theme into the bitmap.
+const gradientSwatch: VoltraAndroidViewStyle = {
+  width: 32,
+  height: 16,
+  borderRadius: 4,
+  backgroundImage: {
+    day: 'linear-gradient(to right, #ff8f00, #ffee58)',
+    night: 'linear-gradient(to right, #311b92, #00bfa5)',
+  },
+}
 
 export type AndroidClientDemoWidgetProps = {
   headline?: string
@@ -117,6 +127,7 @@ export default function AndroidClientDemoWidget(
         >
           prop pair
         </VoltraAndroid.Text>
+        <VoltraAndroid.Box style={gradientSwatch} />
       </VoltraAndroid.Row>
     </VoltraAndroid.Column>
   )
