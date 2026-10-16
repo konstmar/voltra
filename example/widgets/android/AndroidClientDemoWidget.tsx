@@ -128,6 +128,17 @@ export default function AndroidClientDemoWidget(
           prop pair
         </VoltraAndroid.Text>
         <VoltraAndroid.Box style={gradientSwatch} />
+        <VoltraAndroid.Spacer style={{ width: 4 }} />
+        {/* `gradientColors` entries can be pairs: Android draws the current theme's side into the arc. */}
+        <VoltraAndroid.ArcProgressIndicator
+          progress={0.75}
+          strokeWidth={3}
+          gradientColors={[
+            { day: '#ef6c00', night: '#80deea' },
+            { day: '#6a1b9a', night: '#f48fb1' },
+          ]}
+          style={{ width: 16, height: 16 }}
+        />
       </VoltraAndroid.Row>
     </VoltraAndroid.Column>
   )
