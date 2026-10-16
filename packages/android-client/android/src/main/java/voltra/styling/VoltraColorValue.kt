@@ -1,6 +1,7 @@
 package voltra.styling
 
 import android.content.Context
+import android.content.res.Configuration
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.glance.GlanceTheme
@@ -53,6 +54,12 @@ sealed interface VoltraColorValue {
     data class Dynamic(
         val role: VoltraThemeColorRole,
     ) : VoltraColorValue
+
+    /** A `{ day, night }` pair of literal colours. */
+    data class DayNight(
+        val day: Color,
+        val night: Color,
+    ) : VoltraColorValue
 }
 
 @Composable
@@ -90,16 +97,35 @@ fun VoltraThemeColorRole.toColorProvider(colors: ColorProviders): ColorProvider 
         VoltraThemeColorRole.WIDGET_BACKGROUND -> colors.widgetBackground
     }
 
+/**
+ * A pair maps to Glance's public day/night provider: from Android 12 the launcher receives both
+ * colours and swaps them itself; below that Glance picks a side when the widget is composed.
+ */
 @Composable
 fun VoltraColorValue.toColorProvider(): ColorProvider =
     when (this) {
         is VoltraColorValue.Dynamic -> role.toColorProvider()
         is VoltraColorValue.Static -> ColorProvider(color)
+        is VoltraColorValue.DayNight -> androidx.glance.color.ColorProvider(day = day, night = night)
     }
 
 @Composable
 fun VoltraColorValue.resolveColor(context: Context = LocalContext.current): Color =
+    resolveColor(context, GlanceTheme.colors)
+
+/**
+ * Resolves to one concrete colour outside composition: a pair picks the side for the night bit of
+ * [context]'s configuration, and a theme role reads [themeColors].
+ */
+fun VoltraColorValue.resolveColor(
+    context: Context,
+    themeColors: ColorProviders,
+): Color =
     when (this) {
-        is VoltraColorValue.Dynamic -> role.toColorProvider().getColor(context)
+        is VoltraColorValue.Dynamic -> role.toColorProvider(themeColors).getColor(context)
         is VoltraColorValue.Static -> color
+        is VoltraColorValue.DayNight -> if (context.isNightMode()) night else day
     }
+
+internal fun Context.isNightMode(): Boolean =
+    resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES

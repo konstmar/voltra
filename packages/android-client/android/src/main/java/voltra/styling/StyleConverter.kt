@@ -134,7 +134,7 @@ object StyleConverter {
         val borderWidth = JSStyleParser.dp(js["borderWidth"])
         if (borderWidth != null && borderWidth.value > 0) {
             val borderColor =
-                JSStyleParser.color(js["borderColor"])
+                JSStyleParser.color(js["borderColor"], "borderColor")
                     ?: VoltraColorValue.Static(androidx.compose.ui.graphics.Color.Transparent)
             border = BorderStyle(borderWidth, borderColor)
         }
@@ -145,7 +145,7 @@ object StyleConverter {
         val shadowRadius = JSStyleParser.dp(js["shadowRadius"])
         val shadowOpacity = JSStyleParser.number(js["shadowOpacity"])
         val shadowOffset = JSStyleParser.size(js["shadowOffset"])
-        val shadowColor = JSStyleParser.color(js["shadowColor"])
+        val shadowColor = JSStyleParser.color(js["shadowColor"], "shadowColor")
 
         if (shadowRadius != null || shadowOpacity != null || shadowOffset != null || shadowColor != null) {
             val finalRadius = shadowRadius ?: 0.dp
@@ -164,7 +164,7 @@ object StyleConverter {
         val clipToOutline = overflow == Overflow.HIDDEN
 
         return DecorationStyle(
-            backgroundColor = JSStyleParser.color(js["backgroundColor"]),
+            backgroundColor = JSStyleParser.color(js["backgroundColor"], "backgroundColor"),
             backgroundImage = (js["backgroundImage"] as? String)?.let { JSGradientParser.parse(it) },
             cornerRadius = JSStyleParser.dp(js["borderRadius"]),
             clipToOutline = clipToOutline,
@@ -195,7 +195,7 @@ object StyleConverter {
         var style = TextStyle.Default
 
         // Color
-        val color = JSStyleParser.color(js["color"])
+        val color = JSStyleParser.color(js["color"], "color")
         if (color != null) {
             style = style.copy(color = color)
         }

@@ -355,3 +355,40 @@ test('omits chart bounds the caller left open', () => {
   assert.equal(renderAndroidViewToJson(lowerOnly).variants.content.p.ysc, '{"mn":0}')
   assert.equal(renderAndroidViewToJson(empty).variants.content.p.ysc, undefined)
 })
+
+test('passes a style colour pair through to the payload unchanged', () => {
+  const pair = { day: '#ffffff', night: '#000000' }
+  const tree = React.createElement(
+    VoltraAndroid.Column,
+    { style: { backgroundColor: pair, borderColor: pair, shadowColor: pair } },
+    React.createElement(VoltraAndroid.Text, { style: { color: { day: '#000000', night: '#ffffff' } } }, 'Hi')
+  )
+
+  assert.deepEqual(android.renderAndroidVariantToJson(tree), {
+    t: getAndroidComponentId('AndroidColumn'),
+    c: {
+      t: getAndroidComponentId('AndroidText'),
+      c: 'Hi',
+      p: { s: { c: { day: '#000000', night: '#ffffff' } } },
+    },
+    p: { s: { bg: pair, bc: pair, shc: pair } },
+  })
+})
+
+test('registers one style object holding a colour pair once when it is referenced twice', () => {
+  const card = { backgroundColor: { day: '#ffffff', night: '#000000' } }
+  const rendered = renderAndroidViewToJson(
+    React.createElement(
+      VoltraAndroid.Column,
+      null,
+      React.createElement(VoltraAndroid.Box, { style: card }),
+      React.createElement(VoltraAndroid.Box, { style: card })
+    )
+  )
+
+  assert.deepEqual(rendered.s, [{ bg: { day: '#ffffff', night: '#000000' } }])
+  assert.deepEqual(
+    rendered.variants.content.c.map((child) => child.p.s),
+    [0, 0]
+  )
+})
