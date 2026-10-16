@@ -163,9 +163,18 @@ object StyleConverter {
         val overflow = JSStyleParser.overflow(js["overflow"])
         val clipToOutline = overflow == Overflow.HIDDEN
 
+        // A `{ day, night }` pair keeps both gradients; rendering picks one by the night bit.
+        val (backgroundImage, backgroundImageNight) =
+            when (val value = js["backgroundImage"]) {
+                is Map<*, *> -> JSGradientParser.parsePair(value, "backgroundImage") ?: (null to null)
+                is String -> JSGradientParser.parse(value) to null
+                else -> null to null
+            }
+
         return DecorationStyle(
             backgroundColor = JSStyleParser.color(js["backgroundColor"], "backgroundColor"),
-            backgroundImage = (js["backgroundImage"] as? String)?.let { JSGradientParser.parse(it) },
+            backgroundImage = backgroundImage,
+            backgroundImageNight = backgroundImageNight,
             cornerRadius = JSStyleParser.dp(js["borderRadius"]),
             clipToOutline = clipToOutline,
             border = border,
