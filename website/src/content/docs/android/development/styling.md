@@ -61,6 +61,7 @@ Your widget's JavaScript produces the same output in both themes; Android picks 
 - `AndroidDynamicColors.*` tokens are not allowed inside a pair. TypeScript does not catch a token in a style pair; it is rejected when the widget renders.
 - An invalid pair (a missing or empty side, a token, or a value that isn't a color) is dropped as a whole with one warning in Logcat, and the property falls back to its default, as an unparsable color string does.
 - `borderColor` and `shadowColor` accept pairs too, but borders and shadows are not drawn yet.
+- Component color props take pairs as well: `Text` `color`, `Image` `tintColor`/`colorFilter`, the button, `Switch`, `CheckBox` and `RadioButton` colors, the progress indicator colors, and the `TitleBar` and `Scaffold` colors. A `Text` `color` prop wins over the style's `color`.
 
 ### Image Specific
 
