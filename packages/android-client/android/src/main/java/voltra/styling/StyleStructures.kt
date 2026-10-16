@@ -1,5 +1,4 @@
 package voltra.styling
-import android.content.Context
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -55,10 +54,7 @@ data class LayoutStyle(
  */
 data class DecorationStyle(
     val backgroundColor: VoltraColorValue? = null,
-    /** The gradient, or the day side of a `{ day, night }` pair. Draw [backgroundImageFor] instead. */
-    val backgroundImage: BackgroundImageValue? = null,
-    /** The night side of a `{ day, night }` pair; null for a single gradient. */
-    val backgroundImageNight: BackgroundImageValue? = null,
+    val backgroundImage: VoltraBackgroundImage? = null,
     val cornerRadius: Dp? = null,
     val clipToOutline: Boolean = false,
     val border: BorderStyle? = null,
@@ -69,10 +65,6 @@ data class DecorationStyle(
     companion object {
         val Default = DecorationStyle()
     }
-
-    /** The gradient to draw under [context]'s color scheme. */
-    fun backgroundImageFor(context: Context): BackgroundImageValue? =
-        if (backgroundImageNight != null && context.isNightMode()) backgroundImageNight else backgroundImage
 }
 
 /**

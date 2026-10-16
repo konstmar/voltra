@@ -175,7 +175,7 @@ private fun GlanceModifier.applyDecoration(
 
     // A. Background image or color
     val context = LocalContext.current
-    val backgroundImage = decoration.backgroundImageFor(context)
+    val backgroundImage = decoration.backgroundImage?.resolveGradient(context)
     if (backgroundImage != null) {
         val backgroundArgb = decoration.backgroundColor?.resolveColor(context)?.toArgb() ?: 0x00000000
         val colors =
