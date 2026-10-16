@@ -4,8 +4,6 @@ import android.util.Log
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
-import kotlinx.serialization.builtins.ListSerializer
-import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -78,10 +76,28 @@ internal fun parseEncodedImageSource(sourceProp: Any?): EncodedImageSource? {
     }
 }
 
-internal fun parseForegroundStyleScaleEntries(json: String?): List<List<String>>? {
+/**
+ * Parses a chart's JSON-encoded `foregroundStyleScale` entries, `[[series, color], ...]`. The series
+ * is a string; the colour is a string or a `{ day, night }` pair, returned as a `String` or a `Map`
+ * ready for `JSColorParser.parse`. Any other element fails the whole scale.
+ */
+internal fun parseForegroundStyleScaleEntries(json: String?): List<List<Any>>? {
     if (json.isNullOrEmpty()) return null
     return try {
-        rendererJson.decodeFromString(ListSerializer(ListSerializer(String.serializer())), json)
+        val entries =
+            rendererJson.parseToJsonElement(json) as? JsonArray
+                ?: throw SerializationException("Expected a JSON array of [series, color] entries")
+        entries.map { entry ->
+            val elements =
+                entry as? JsonArray ?: throw SerializationException("Expected a [series, color] entry, got $entry")
+            elements.map { element ->
+                when {
+                    element is JsonObject -> element.toDynamicObject()
+                    element is JsonPrimitive && element.isString -> element.content
+                    else -> throw SerializationException("Expected a string or a { day, night } object, got $element")
+                }
+            }
+        }
     } catch (error: Exception) {
         warn("Failed to parse foregroundStyleScale", error)
         null

@@ -420,3 +420,17 @@ test('keeps gradientColors a JSON string when an element is a colour pair', () =
 
   assert.equal(arc.p.gc, '[{"day":"#ffffff","night":"#000000"},"#3B82F6","~p"]')
 })
+
+test('keeps chart marks and foregroundStyleScale JSON strings when a colour is a pair', () => {
+  const pair = { day: '#ffffff', night: '#000000' }
+  const chart = android.renderAndroidVariantToJson(
+    React.createElement(
+      VoltraAndroid.Chart,
+      { foregroundStyleScale: { A: pair } },
+      React.createElement(VoltraAndroid.BarMark, { data: [{ x: 'a', y: 1 }], color: pair })
+    )
+  )
+
+  assert.equal(chart.p.mrk, '[["bar",[["a",1]],{"c":{"day":"#ffffff","night":"#000000"}}]]')
+  assert.equal(chart.p.fss, '[["A",{"day":"#ffffff","night":"#000000"}]]')
+})
