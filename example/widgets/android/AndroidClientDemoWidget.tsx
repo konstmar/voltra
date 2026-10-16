@@ -17,7 +17,7 @@ const styles = StyleSheet.create({
   swatch: { width: 16, height: 16, borderRadius: 4 },
 })
 
-// `{ day, night }` colour pairs: the JS output is the same in both themes and Android picks the
+// `{ day, night }` color pairs: the JS output is the same in both themes and Android picks the
 // side. React Native's StyleSheet types don't know pairs, so these are plain Voltra style objects.
 const pairCard: VoltraAndroidViewStyle = {
   backgroundColor: { day: '#fff3c4', night: '#1a237e' },
@@ -114,12 +114,12 @@ export default function AndroidClientDemoWidget(
       {row('server city:', serverCity)}
       {row('server temp:', serverTemp)}
       {row('time:', renderedAt)}
-      {/* Colour-pair demos share this one Row so the Column stays under Glance's 10-child limit. */}
+      {/* Color-pair demos share this one Row so the Column stays under Glance's 10-child limit. */}
       <VoltraAndroid.Row>
         <VoltraAndroid.Box style={pairCard}>
           <VoltraAndroid.Text style={pairCardText}>day/night pair</VoltraAndroid.Text>
         </VoltraAndroid.Box>
-        {/* Component colour props take pairs too: this colour comes from Text's `color` prop. */}
+        {/* Component color props take pairs too: this color comes from Text's `color` prop. */}
         <VoltraAndroid.Text
           color={{ day: '#c62828', night: '#80cbc4' }}
           style={{ fontSize: 10 }}

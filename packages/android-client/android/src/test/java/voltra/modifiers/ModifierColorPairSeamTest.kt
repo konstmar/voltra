@@ -19,13 +19,13 @@ import voltra.glance.applyUnder
 import voltra.glance.backgroundColors
 import voltra.styling.VoltraColorValue
 
-/** Colour pairs and the native modifier scope, through the native compose/apply seam. */
+/** Color pairs and the native modifier scope, through the native compose/apply seam. */
 @RunWith(RobolectricTestRunner::class)
 class ModifierColorPairSeamTest {
     private val white = 0xFFFFFFFF.toInt()
     private val black = 0xFF000000.toInt()
 
-    private val scope = VoltraModifierScope { error("no theme colours in this test") }
+    private val scope = VoltraModifierScope { error("no theme colors in this test") }
 
     private fun composePairBackground(scheme: Scheme) =
         NativeComposeSeam.compose(scheme) {
@@ -39,7 +39,7 @@ class ModifierColorPairSeamTest {
 
     @Test
     @Config(sdk = [31])
-    fun scopeMapsAPairToBothColoursFromAndroid12() {
+    fun scopeMapsAPairToBothColorsFromAndroid12() {
         val views = composePairBackground(Scheme.DAY)
 
         assertEquals(listOf(white), views.applyUnder(Scheme.DAY).backgroundColors())

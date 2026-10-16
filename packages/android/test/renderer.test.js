@@ -356,7 +356,7 @@ test('omits chart bounds the caller left open', () => {
   assert.equal(renderAndroidViewToJson(empty).variants.content.p.ysc, undefined)
 })
 
-test('passes a style colour pair through to the payload unchanged', () => {
+test('passes a style color pair through to the payload unchanged', () => {
   const pair = { day: '#ffffff', night: '#000000' }
   const tree = React.createElement(
     VoltraAndroid.Column,
@@ -375,7 +375,7 @@ test('passes a style colour pair through to the payload unchanged', () => {
   })
 })
 
-test('registers one style object holding a colour pair once when it is referenced twice', () => {
+test('registers one style object holding a color pair once when it is referenced twice', () => {
   const card = { backgroundColor: { day: '#ffffff', night: '#000000' } }
   const rendered = renderAndroidViewToJson(
     React.createElement(
@@ -393,7 +393,7 @@ test('registers one style object holding a colour pair once when it is reference
   )
 })
 
-test('passes a component colour prop pair through to the payload as a { day, night } object', () => {
+test('passes a component color prop pair through to the payload as a { day, night } object', () => {
   const pair = { day: '#000000', night: '#ffffff' }
   const tree = React.createElement(
     VoltraAndroid.Column,
@@ -412,7 +412,7 @@ test('passes a component colour prop pair through to the payload as a { day, nig
   assert.deepEqual(arc.p.trc, pair)
 })
 
-test('keeps gradientColors a JSON string when an element is a colour pair', () => {
+test('keeps gradientColors a JSON string when an element is a color pair', () => {
   const pair = { day: '#ffffff', night: '#000000' }
   const arc = android.renderAndroidVariantToJson(
     React.createElement(VoltraAndroid.ArcProgressIndicator, { progress: 0.5, gradientColors: [pair, '#3B82F6', '~p'] })
@@ -421,7 +421,7 @@ test('keeps gradientColors a JSON string when an element is a colour pair', () =
   assert.equal(arc.p.gc, '[{"day":"#ffffff","night":"#000000"},"#3B82F6","~p"]')
 })
 
-test('keeps chart marks and foregroundStyleScale JSON strings when a colour is a pair', () => {
+test('keeps chart marks and foregroundStyleScale JSON strings when a color is a pair', () => {
   const pair = { day: '#ffffff', night: '#000000' }
   const chart = android.renderAndroidVariantToJson(
     React.createElement(

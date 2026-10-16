@@ -67,7 +67,7 @@ export const validateShortNames = (data: ComponentsData): void => {
     }
   }
 
-  // 3. `day` and `night` are the keys of a colour pair; a short name equal to either would be
+  // 3. `day` and `night` are the keys of a color pair; a short name equal to either would be
   //    expanded inside the pair on decompression
   for (const [name, short] of Object.entries(shortNames)) {
     if (RESERVED_SHORT_NAMES.includes(short)) {

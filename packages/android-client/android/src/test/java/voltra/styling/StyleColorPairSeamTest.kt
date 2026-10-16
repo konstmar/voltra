@@ -14,13 +14,13 @@ import voltra.glance.applyUnder
 import voltra.glance.backgroundColors
 import voltra.glance.textColors
 
-/** `{ day, night }` pairs on style colour keys, through the native compose/apply seam. */
+/** `{ day, night }` pairs on style color keys, through the native compose/apply seam. */
 @RunWith(RobolectricTestRunner::class)
 class StyleColorPairSeamTest {
     private val white = 0xFFFFFFFF.toInt()
     private val black = 0xFF000000.toInt()
 
-    // A Column with a pair background holding a Text with the opposite pair as its colour.
+    // A Column with a pair background holding a Text with the opposite pair as its color.
     private val card =
         """
         {"t":9,"p":{"s":{"bg":{"day":"#ffffff","night":"#000000"}}},
@@ -34,7 +34,7 @@ class StyleColorPairSeamTest {
 
     @Test
     @Config(sdk = [31])
-    fun launcherSwapsBothColoursWithoutRecomposingFromAndroid12() {
+    fun launcherSwapsBothColorsWithoutRecomposingFromAndroid12() {
         val views = NativeComposeSeam.compose(NativeComposeSeam.node(card), Scheme.DAY)
 
         val day = views.applyUnder(Scheme.DAY)
@@ -63,7 +63,7 @@ class StyleColorPairSeamTest {
     }
 
     @Test
-    fun aPairReachesEveryStyleColourKeyWithoutError() {
+    fun aPairReachesEveryStyleColorKeyWithoutError() {
         val pair = """{"day":"#ffffff","night":"#000000"}"""
         val json =
             """

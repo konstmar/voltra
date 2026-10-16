@@ -55,7 +55,7 @@ sealed interface VoltraColorValue {
         val role: VoltraThemeColorRole,
     ) : VoltraColorValue
 
-    /** A `{ day, night }` pair of literal colours. */
+    /** A `{ day, night }` pair of literal colors. */
     data class DayNight(
         val day: Color,
         val night: Color,
@@ -99,7 +99,7 @@ fun VoltraThemeColorRole.toColorProvider(colors: ColorProviders): ColorProvider 
 
 /**
  * A pair maps to Glance's public day/night provider: from Android 12 the launcher receives both
- * colours and swaps them itself; below that Glance picks a side when the widget is composed.
+ * colors and swaps them itself; below that Glance picks a side when the widget is composed.
  */
 @Composable
 fun VoltraColorValue.toColorProvider(): ColorProvider =
@@ -114,7 +114,7 @@ fun VoltraColorValue.resolveColor(context: Context = LocalContext.current): Colo
     resolveColor(context, GlanceTheme.colors)
 
 /**
- * Resolves to one concrete colour outside composition: a pair picks the side for the night bit of
+ * Resolves to one concrete color outside composition: a pair picks the side for the night bit of
  * [context]'s configuration, and a theme role reads [themeColors].
  */
 fun VoltraColorValue.resolveColor(

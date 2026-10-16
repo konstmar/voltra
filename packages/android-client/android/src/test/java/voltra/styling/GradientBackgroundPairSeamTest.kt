@@ -19,7 +19,7 @@ import voltra.glance.backgroundColors
 import voltra.glance.imageBitmaps
 import voltra.glance.renderers.renderGradientBitmap
 
-/** `backgroundImage` gradients following the colour scheme, through the native compose/apply seam. */
+/** `backgroundImage` gradients following the color scheme, through the native compose/apply seam. */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class GradientBackgroundPairSeamTest {
@@ -90,7 +90,7 @@ class GradientBackgroundPairSeamTest {
     }
 
     @Test
-    fun anInvalidPairFallsBackToTheBackgroundColourAndNamesTheKey() {
+    fun anInvalidPairFallsBackToTheBackgroundColorAndNamesTheKey() {
         val json =
             """
             {"t":9,"p":{"s":{"w":40,"h":20,"bg":"#00ff00",

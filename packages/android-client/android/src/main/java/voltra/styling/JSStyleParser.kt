@@ -59,7 +59,7 @@ object JSStyleParser {
     }
 
     /**
-     * Parse a colour value (delegates to JSColorParser). [key] names the style key in warnings.
+     * Parse a color value (delegates to JSColorParser). [key] names the style key in warnings.
      */
     fun color(
         value: Any?,

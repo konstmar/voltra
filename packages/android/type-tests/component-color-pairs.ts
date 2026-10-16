@@ -1,4 +1,4 @@
-// Type tests for colour pairs on component colour props. Each `@ts-expect-error` line must fail to compile; every
+// Type tests for color pairs on component color props. Each `@ts-expect-error` line must fail to compile; every
 // other line must compile. Run by `pnpm --filter @use-voltra/android typecheck`.
 import type { ComponentProps } from 'react'
 
@@ -7,7 +7,7 @@ import { AndroidDynamicColors, VoltraAndroid } from '@use-voltra/android'
 const pair = { day: '#ffffff', night: '#000000' } as const
 
 export const componentPropTypeTests = [
-  // A representative set of component colour props takes a pair.
+  // A representative set of component color props takes a pair.
   (): ComponentProps<typeof VoltraAndroid.Text> => ({ color: pair }),
   (): ComponentProps<typeof VoltraAndroid.Image> => ({
     source: { assetName: 'icon' },

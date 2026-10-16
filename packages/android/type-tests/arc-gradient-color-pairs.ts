@@ -1,4 +1,4 @@
-// Type tests for colour pairs inside an arc indicator's `gradientColors`. Each `@ts-expect-error` line must fail to
+// Type tests for color pairs inside an arc indicator's `gradientColors`. Each `@ts-expect-error` line must fail to
 // compile; every other line must compile. Run by `pnpm --filter @use-voltra/android typecheck`.
 import type { ComponentProps } from 'react'
 
@@ -9,7 +9,7 @@ type ArcProps = ComponentProps<typeof VoltraAndroid.ArcProgressIndicator>
 const pair = { day: '#ffffff', night: '#000000' } as const
 
 export const arcGradientTypeTests = [
-  // Pairs, literal colours and role tokens mix freely as elements.
+  // Pairs, literal colors and role tokens mix freely as elements.
   (): ArcProps => ({ gradientColors: [pair, '#fff', AndroidDynamicColors.primary] }),
   (): ArcProps => ({ gradientColors: ['#22C55E', '#3B82F6'] }),
 

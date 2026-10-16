@@ -17,14 +17,14 @@ import voltra.glance.progressTints
 import voltra.glance.textColors
 import voltra.payload.ComponentTypeID
 
-/** `{ day, night }` pairs on component colour props, through the native compose/apply seam. */
+/** `{ day, night }` pairs on component color props, through the native compose/apply seam. */
 @RunWith(RobolectricTestRunner::class)
 class ComponentPropColorPairSeamTest {
     private val red = 0xFFFF0000.toInt()
     private val blue = 0xFF0000FF.toInt()
     private val pair = """{"day":"#ff0000","night":"#0000ff"}"""
 
-    /** A compressed payload per prop, and how to read that prop's colour off the applied Views. */
+    /** A compressed payload per prop, and how to read that prop's color off the applied Views. */
     private val viewCases: Map<String, Pair<String, (View) -> Int?>> =
         mapOf(
             "Text color" to ("""{"t":18,"c":"Hi","p":{"c":$pair}}""" to { view -> view.textColors()["Hi"] }),
@@ -46,7 +46,7 @@ class ComponentPropColorPairSeamTest {
     @Test
     @Config(sdk = [31])
     fun componentPropPairsSwapWithoutRecomposingFromAndroid12() {
-        // Glance only tints progress bars from Android 12, so the progress colour joins here.
+        // Glance only tints progress bars from Android 12, so the progress color joins here.
         val linear = """{"t":12,"p":{"prg":0.5,"c":$pair}}""" to { view: View -> view.progressTints().firstOrNull() }
 
         for ((name, case) in viewCases + ("LinearProgressIndicator color" to linear)) {
@@ -72,19 +72,19 @@ class ComponentPropColorPairSeamTest {
     }
 
     @Test
-    fun theTextColorPropWinsOverTheStyleColour() {
+    fun theTextColorPropWinsOverTheStyleColor() {
         val json = """{"t":18,"c":"Hi","p":{"s":{"c":"#00ff00"},"c":$pair}}"""
 
         assertEquals(blue, NativeComposeSeam.render(json, composeUnder = Scheme.NIGHT).textColors()["Hi"])
     }
 
     /**
-     * Every component colour prop hands its raw value to the colour parser: an invalid pair is
+     * Every component color prop hands its raw value to the color parser: an invalid pair is
      * dropped with a warning naming the prop, instead of being skipped as a non-string or crashing
      * the composition. Props are written unshortened; decompression leaves unknown keys as they are.
      */
     @Test
-    fun everyComponentColourPropHandsAPairToTheParser() {
+    fun everyComponentColorPropHandsAPairToTheParser() {
         val invalid = """{"day":"~p","night":"#000000"}"""
         val icon = """{"assetName":"icon"}"""
         val cases =

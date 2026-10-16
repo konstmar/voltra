@@ -13,7 +13,7 @@ object JSColorParser {
     /**
      * Parse color value from any format.
      * Supports: hex (#RGB, #RRGGBB, #RRGGBBAA), rgb/rgba, hsl/hsla, named colors, theme role
-     * tokens, and `{ day, night }` pairs of literal colours.
+     * tokens, and `{ day, night }` pairs of literal colors.
      *
      * @param key the style key or prop the value came from, named in the warning for an invalid pair.
      */
@@ -31,7 +31,7 @@ object JSColorParser {
     }
 
     /**
-     * Both sides must be literal colours in the string grammar; anything else drops the whole pair
+     * Both sides must be literal colors in the string grammar; anything else drops the whole pair
      * with one warning, so the property falls back to its default as for an unparsable string.
      */
     private fun parsePair(
@@ -45,8 +45,8 @@ object JSColorParser {
         val side = if (day == null) "day" else "night"
         Log.w(
             TAG,
-            "Ignoring invalid colour pair${key?.let { " for $it" } ?: ""}: " +
-                "$side must be a literal colour string, got ${describe(pair[side], side in pair)}",
+            "Ignoring invalid color pair${key?.let { " for $it" } ?: ""}: " +
+                "$side must be a literal color string, got ${describe(pair[side], side in pair)}",
         )
         return null
     }

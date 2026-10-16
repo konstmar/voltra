@@ -25,12 +25,12 @@ import voltra.parsing.VoltraDecompressor
 
 /**
  * The native compose/apply seam: composes Glance content into `RemoteViews` the way a widget update
- * does, applies them into a real `View` tree under a chosen colour scheme, and reads what a user
+ * does, applies them into a real `View` tree under a chosen color scheme, and reads what a user
  * would see on the Views. No JavaScript runs: the node is built by hand or decoded from compressed
  * JSON, exactly as the on-device renderer emits it.
  *
  * Run under Robolectric. Use `@Config(sdk = [31])` for the path where the launcher receives both
- * colours of a pair and `[26]` for the path where composition bakes one side in; add
+ * colors of a pair and `[26]` for the path where composition bakes one side in; add
  * `@GraphicsMode(GraphicsMode.Mode.NATIVE)` when reading bitmap pixels, and clear the arc bitmap
  * cache between schemes.
  *
@@ -113,10 +113,10 @@ fun View.descendants(): Sequence<View> =
         }
     }
 
-/** Every solid background colour in the tree (ARGB), depth first. */
+/** Every solid background color in the tree (ARGB), depth first. */
 fun View.backgroundColors(): List<Int> = descendants().mapNotNull { (it.background as? ColorDrawable)?.color }.toList()
 
-/** The current text colour (ARGB) of every `TextView`, keyed by its text. */
+/** The current text color (ARGB) of every `TextView`, keyed by its text. */
 fun View.textColors(): Map<String, Int> =
     descendants().filterIsInstance<TextView>().associate { it.text.toString() to it.currentTextColor }
 

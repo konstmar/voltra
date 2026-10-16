@@ -14,7 +14,7 @@ import voltra.glance.NativeComposeSeam.Scheme
 import voltra.glance.imageBitmaps
 
 /**
- * `{ day, night }` pairs in chart colours, through the native compose/apply seam. A chart is a bitmap
+ * `{ day, night }` pairs in chart colors, through the native compose/apply seam. A chart is a bitmap
  * baked at composition on every API level, so each scheme is composed on its own.
  */
 @RunWith(RobolectricTestRunner::class)
@@ -23,8 +23,8 @@ class ChartColorPairSeamTest {
     private val red = 0xFFFF0000.toInt()
     private val blue = 0xFF0000FF.toInt()
 
-    /** First colour of the chart's default palette, used when a mark or series has no colour. */
-    private val defaultColour = 0xFF4E79A7.toInt()
+    /** First color of the chart's default palette, used when a mark or series has no color. */
+    private val defaultColor = 0xFF4E79A7.toInt()
 
     @Before
     fun reset() {
@@ -46,7 +46,7 @@ class ChartColorPairSeamTest {
 
     private fun String.escaped() = replace("\"", "\\\"")
 
-    private fun barColoursUnder(
+    private fun barColorsUnder(
         json: String,
         scheme: Scheme,
     ): Set<String> =
@@ -54,10 +54,10 @@ class ChartColorPairSeamTest {
             .render(json, composeUnder = scheme)
             .imageBitmaps()
             .single()
-            .opaqueColours()
+            .opaqueColors()
 
-    /** Colours of the fully opaque pixels, which antialiasing leaves untouched inside the bars. */
-    private fun Bitmap.opaqueColours(): Set<String> {
+    /** Colors of the fully opaque pixels, which antialiasing leaves untouched inside the bars. */
+    private fun Bitmap.opaqueColors(): Set<String> {
         val pixels = IntArray(width * height).also { getPixels(it, 0, width, 0, 0, width, height) }
         return pixels.filter { it ushr 24 == 0xFF }.map(::hex).toSet()
     }
@@ -65,11 +65,11 @@ class ChartColorPairSeamTest {
     private fun hex(color: Int) = Integer.toHexString(color)
 
     @Test
-    fun barsFollowAMarkColourPairInEachScheme() {
+    fun barsFollowAMarkColorPairInEachScheme() {
         val json = chart("""[["bar",[["a",1]],{"c":{"day":"#ff0000","night":"#0000ff"}}]]""")
 
-        assertEquals("day", setOf(hex(red)), barColoursUnder(json, Scheme.DAY))
-        assertEquals("night", setOf(hex(blue)), barColoursUnder(json, Scheme.NIGHT))
+        assertEquals("day", setOf(hex(red)), barColorsUnder(json, Scheme.DAY))
+        assertEquals("night", setOf(hex(blue)), barColorsUnder(json, Scheme.NIGHT))
         assertTrue(ShadowLog.getLogsForTag("JSColorParser").isEmpty())
     }
 
@@ -81,31 +81,31 @@ class ChartColorPairSeamTest {
                 scale = """[["A",{"day":"#ff0000","night":"#0000ff"}]]""",
             )
 
-        assertEquals("day", setOf(hex(red)), barColoursUnder(json, Scheme.DAY))
-        assertEquals("night", setOf(hex(blue)), barColoursUnder(json, Scheme.NIGHT))
+        assertEquals("day", setOf(hex(red)), barColorsUnder(json, Scheme.DAY))
+        assertEquals("night", setOf(hex(blue)), barColorsUnder(json, Scheme.NIGHT))
         assertTrue(ShadowLog.getLogsForTag("JSColorParser").isEmpty())
     }
 
     @Test
-    fun anInvalidMarkColourPairFallsBackToTheDefaultColourWithOneWarning() {
+    fun anInvalidMarkColorPairFallsBackToTheDefaultColorWithOneWarning() {
         val json = chart("""[["bar",[["a",1]],{"c":{"day":"#ff0000","night":"~p"}}]]""")
 
-        assertEquals(setOf(hex(defaultColour)), barColoursUnder(json, Scheme.DAY))
-        val expected = "Ignoring invalid colour pair for color: night must be a literal colour string, got \"~p\""
+        assertEquals(setOf(hex(defaultColor)), barColorsUnder(json, Scheme.DAY))
+        val expected = "Ignoring invalid color pair for color: night must be a literal color string, got \"~p\""
         assertEquals(listOf(expected), ShadowLog.getLogsForTag("JSColorParser").map { it.msg })
     }
 
     @Test
-    fun anInvalidForegroundStyleScalePairFallsBackToTheDefaultColourWithOneWarning() {
+    fun anInvalidForegroundStyleScalePairFallsBackToTheDefaultColorWithOneWarning() {
         val json =
             chart(
                 marks = """[["bar",[["a",1,"A"]],{}]]""",
                 scale = """[["A",{"day":"#ff0000"}]]""",
             )
 
-        assertEquals(setOf(hex(defaultColour)), barColoursUnder(json, Scheme.DAY))
+        assertEquals(setOf(hex(defaultColor)), barColorsUnder(json, Scheme.DAY))
         val expected =
-            "Ignoring invalid colour pair for foregroundStyleScale: night must be a literal colour string, got nothing"
+            "Ignoring invalid color pair for foregroundStyleScale: night must be a literal color string, got nothing"
         assertEquals(listOf(expected), ShadowLog.getLogsForTag("JSColorParser").map { it.msg })
     }
 }

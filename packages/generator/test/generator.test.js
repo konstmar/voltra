@@ -140,7 +140,7 @@ test('validates component fixtures and reports useful schema errors', () => {
   assert.match(invalidParamCapture.entries.map((entry) => entry.text).join('\n'), /Text.not-valid/)
 })
 
-test('rejects short names reserved for day/night colour pair keys', () => {
+test('rejects short names reserved for day/night color pair keys', () => {
   assert.doesNotThrow(() => validateShortNames(createFixtureData()))
 
   for (const reserved of ['day', 'night']) {

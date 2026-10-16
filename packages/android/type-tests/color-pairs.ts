@@ -1,4 +1,4 @@
-// Type tests for colour pairs. Each `@ts-expect-error` line must fail to compile; every other line must compile.
+// Type tests for color pairs. Each `@ts-expect-error` line must fail to compile; every other line must compile.
 // Run by `pnpm --filter @use-voltra/android typecheck`.
 import { AndroidDynamicColors, VoltraAndroid } from '@use-voltra/android'
 import type * as Root from '@use-voltra/android'
@@ -16,7 +16,7 @@ export const typeTests = [
   // @ts-expect-error sides must be strings.
   (): AndroidColorPair => ({ day: 1, night: 2 }),
 
-  // `background` accepts a string, a role token or a pair of static colours.
+  // `background` accepts a string, a role token or a pair of static colors.
   () => background({ day: '#ffffff', night: '#000000' }),
   () => background('#fff'),
   () => background(AndroidDynamicColors.primary),

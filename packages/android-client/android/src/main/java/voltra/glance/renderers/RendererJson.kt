@@ -78,7 +78,7 @@ internal fun parseEncodedImageSource(sourceProp: Any?): EncodedImageSource? {
 
 /**
  * Parses a chart's JSON-encoded `foregroundStyleScale` entries, `[[series, color], ...]`. The series
- * is a string; the colour is a string or a `{ day, night }` pair, returned as a `String` or a `Map`
+ * is a string; the color is a string or a `{ day, night }` pair, returned as a `String` or a `Map`
  * ready for `JSColorParser.parse`. Any other element fails the whole scale.
  */
 internal fun parseForegroundStyleScaleEntries(json: String?): List<List<Any>>? {

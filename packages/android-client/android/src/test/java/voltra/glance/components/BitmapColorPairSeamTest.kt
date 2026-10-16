@@ -66,7 +66,7 @@ class BitmapColorPairSeamTest {
     private fun hex(color: Int) = Integer.toHexString(color)
 
     @Test
-    fun theArcFilledEndFollowsAGradientColourPairInEachScheme() {
+    fun theArcFilledEndFollowsAGradientColorPairInEachScheme() {
         val json = arc("""[{"day":"#ff0000","night":"#0000ff"},{"day":"#ff0000","night":"#0000ff"}]""")
 
         assertEquals("day", hex(red), hex(arcBitmapUnder(json, Scheme.DAY).filledEnd()))
@@ -75,24 +75,24 @@ class BitmapColorPairSeamTest {
     }
 
     @Test
-    fun anInvalidGradientPairFallsBackToTheSolidColourAndNamesTheProp() {
+    fun anInvalidGradientPairFallsBackToTheSolidColorAndNamesTheProp() {
         val json = arc("""[{"day":"#ff0000","night":"~p"},"#0000ff"]""")
 
         assertEquals(hex(green), hex(arcBitmapUnder(json, Scheme.DAY).filledEnd()))
         val warnings = ShadowLog.getLogsForTag("JSColorParser").map { it.msg }
         val expected =
-            "Ignoring invalid colour pair for gradientColors: night must be a literal colour string, got \"~p\""
+            "Ignoring invalid color pair for gradientColors: night must be a literal color string, got \"~p\""
         assertEquals(listOf(expected), warnings)
     }
 
-    /** Colours of the fully opaque pixels, which antialiasing leaves untouched inside the glyphs. */
-    private fun Bitmap.opaqueColours(): Set<String> {
+    /** Colors of the fully opaque pixels, which antialiasing leaves untouched inside the glyphs. */
+    private fun Bitmap.opaqueColors(): Set<String> {
         val pixels = IntArray(width * height).also { getPixels(it, 0, width, 0, 0, width, height) }
         return pixels.filter { it ushr 24 == 0xFF }.map(::hex).toSet()
     }
 
     @Test
-    fun customFontTextIsDrawnInEachSidesColour() {
+    fun customFontTextIsDrawnInEachSidesColor() {
         val pair = """{"day":"#ff0000","night":"#0000ff"}"""
         // A font family plus `renderAsBitmap` sends Text down the custom-font bitmap path.
         val font = """"ff":"serif","fs":48"""
@@ -106,8 +106,8 @@ class BitmapColorPairSeamTest {
             val day = NativeComposeSeam.render(json, composeUnder = Scheme.DAY).imageBitmaps().single()
             val night = NativeComposeSeam.render(json, composeUnder = Scheme.NIGHT).imageBitmaps().single()
 
-            assertEquals("$name by day", setOf(hex(red)), day.opaqueColours())
-            assertEquals("$name by night", setOf(hex(blue)), night.opaqueColours())
+            assertEquals("$name by day", setOf(hex(red)), day.opaqueColors())
+            assertEquals("$name by night", setOf(hex(blue)), night.opaqueColors())
         }
         assertTrue(ShadowLog.getLogsForTag("JSColorParser").isEmpty())
     }

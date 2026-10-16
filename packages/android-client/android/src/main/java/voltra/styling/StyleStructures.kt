@@ -70,7 +70,7 @@ data class DecorationStyle(
         val Default = DecorationStyle()
     }
 
-    /** The gradient to draw under [context]'s colour scheme. */
+    /** The gradient to draw under [context]'s color scheme. */
     fun backgroundImageFor(context: Context): BackgroundImageValue? =
         if (backgroundImageNight != null && context.isNightMode()) backgroundImageNight else backgroundImage
 }

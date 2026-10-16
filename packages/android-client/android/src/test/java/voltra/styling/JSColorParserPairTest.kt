@@ -11,7 +11,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.shadows.ShadowLog
 
 /**
- * `{ day, night }` colour pairs: each side is a literal colour in the string grammar, and an invalid
+ * `{ day, night }` color pairs: each side is a literal color in the string grammar, and an invalid
  * pair is dropped as a whole with exactly one warning.
  */
 @RunWith(RobolectricTestRunner::class)
@@ -29,7 +29,7 @@ class JSColorParserPairTest {
     ) = JSColorParser.parse(mapOf("day" to day, "night" to night), "backgroundColor")
 
     @Test
-    fun parsesAPairOfHexColours() {
+    fun parsesAPairOfHexColors() {
         assertEquals(
             VoltraColorValue.DayNight(day = Color.White, night = Color.Black),
             parsePair("#ffffff", "#000000"),
@@ -97,7 +97,7 @@ class JSColorParserPairTest {
                 "unparsable hex day" to mapOf("day" to "#zzzzzz", "night" to "#000"),
                 "unparsable rgb night" to mapOf("day" to "#fff", "night" to "rgb(nope)"),
                 "unparsable hsl night" to mapOf("day" to "#fff", "night" to "hsl(1, 2)"),
-                "unknown name" to mapOf("day" to "not-a-colour", "night" to "#000"),
+                "unknown name" to mapOf("day" to "not-a-color", "night" to "#000"),
                 "token day" to mapOf("day" to "~p", "night" to "#000"),
                 "token night" to mapOf("day" to "#fff", "night" to "~osf"),
                 "both sides invalid" to mapOf("day" to "~p", "night" to 1),
