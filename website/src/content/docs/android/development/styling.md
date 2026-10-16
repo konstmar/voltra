@@ -26,7 +26,7 @@ The following React Native style properties are supported on Android:
 
 ### Visual Style
 
-- `backgroundColor` - Background color (hex strings, color names, or `AndroidDynamicColors.*` tokens).
+- `backgroundColor` - Background color (hex strings, color names, `AndroidDynamicColors.*` tokens, or a [`{ day, night }` pair](#day-and-night-colors)).
 - `backgroundImage` - CSS gradient background. Supports `linear-gradient(...)`, `radial-gradient(...)`, and `conic-gradient(...)`.
 - `borderRadius` - Corner radius in dp. **Note:** Requires Android 12+ (API 31). On older versions it is ignored, except on an `Image` with a fixed numeric `width` and `height`. On an `Image`, the radius rounds the image's box, not the picture inside it; see [Image](/android/components/visual#image).
 
@@ -35,10 +35,32 @@ The following React Native style properties are supported on Android:
 - `fontSize` - Font size in sp.
 - `fontWeight` - Supports `"normal"` and `"bold"`.
 - `fontFamily` - Font family name. Built-in values: `"monospace"`, `"serif"`, `"sans-serif"`, `"cursive"`. For custom fonts, see [Custom Fonts](/android/development/custom-fonts).
-- `color` - Text color (literal colors or `AndroidDynamicColors.*`).
+- `color` - Text color (literal colors, `AndroidDynamicColors.*`, or a [`{ day, night }` pair](#day-and-night-colors)).
 - `textDecorationLine` - Supports `"underline"` and `"line-through"`.
 - `textAlign` - Alignment of text within the component (`"left"`, `"center"`, `"right"`).
 - `numberOfLines` - Limits the number of lines displayed.
+
+### Day and night colors
+
+`backgroundColor` and text `color` also take a pair of colors, one for the light system theme and one for the dark one. The type is `AndroidColorPair`, exported from `@use-voltra/android`:
+
+```tsx
+import type { AndroidColorPair } from '@use-voltra/android'
+
+const cardBackground: AndroidColorPair = { day: '#ffffff', night: 'rgba(32, 33, 36, 0.9)' }
+
+<Column style={{ backgroundColor: cardBackground }}>
+  <Text style={{ color: { day: '#202124', night: 'white' } }}>Hello</Text>
+</Column>
+```
+
+Your widget's JavaScript produces the same output in both themes; Android picks the side. On Android 12+ the launcher receives both colors and swaps them itself when the theme changes, even when your app isn't running. On older versions the color is picked when the widget is drawn: Voltra redraws widgets on a theme change while your app's process is alive, and otherwise the widget keeps the previous side until its next update.
+
+- Each side takes any literal color the string form accepts: hex with or without alpha (`#fff`, `#ffffff80`), `rgb()`/`rgba()`, `hsl()`/`hsla()`, color names and `transparent`. Alpha is kept per side.
+- Both `day` and `night` are required. Other keys are ignored.
+- `AndroidDynamicColors.*` tokens are not allowed inside a pair. TypeScript does not catch a token in a style pair; it is rejected when the widget renders.
+- An invalid pair (a missing or empty side, a token, or a value that isn't a color) is dropped as a whole with one warning in Logcat, and the property falls back to its default, as an unparsable color string does.
+- `borderColor` and `shadowColor` accept pairs too, but borders and shadows are not drawn yet.
 
 ### Image Specific
 
