@@ -2,6 +2,7 @@ import type { AndroidColorValue } from '../dynamic-colors.js'
 import { createAndroidModifier } from './createAndroidModifier.js'
 
 export type { AndroidModifier } from './createAndroidModifier.js'
+// `DayNightColors` is the 2.4.0 name for `AndroidColorPair`, kept as an alias so existing imports still compile.
 export type { AndroidColorPair as DayNightColors, StaticColor } from '../dynamic-colors.js'
 
 export type PaddingValues = {
