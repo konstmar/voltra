@@ -49,7 +49,7 @@ object JSGradientParser {
      */
     fun parsePair(
         pair: Map<*, *>,
-        key: String? = null,
+        key: String,
     ): VoltraBackgroundImage.DayNight? =
         parseDayNightPair(
             pair,

@@ -63,7 +63,7 @@ object JSStyleParser {
      */
     fun color(
         value: Any?,
-        key: String? = null,
+        key: String,
     ): VoltraColorValue? = JSColorParser.parse(value, key)
 
     /**

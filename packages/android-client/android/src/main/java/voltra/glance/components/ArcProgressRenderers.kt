@@ -170,7 +170,7 @@ private fun isSized(size: SizeValue?): Boolean = size is SizeValue.Fixed || size
 private fun resolveArgb(
     value: Any?,
     context: Context,
-    key: String? = null,
+    key: String,
 ): Int? = JSColorParser.parse(value, key)?.resolveColor(context)?.toArgb()
 
 /**
