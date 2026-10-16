@@ -411,3 +411,12 @@ test('passes a component colour prop pair through to the payload as a { day, nig
   assert.deepEqual(arc.p.c, pair)
   assert.deepEqual(arc.p.trc, pair)
 })
+
+test('keeps gradientColors a JSON string when an element is a colour pair', () => {
+  const pair = { day: '#ffffff', night: '#000000' }
+  const arc = android.renderAndroidVariantToJson(
+    React.createElement(VoltraAndroid.ArcProgressIndicator, { progress: 0.5, gradientColors: [pair, '#3B82F6', '~p'] })
+  )
+
+  assert.equal(arc.p.gc, '[{"day":"#ffffff","night":"#000000"},"#3B82F6","~p"]')
+})
