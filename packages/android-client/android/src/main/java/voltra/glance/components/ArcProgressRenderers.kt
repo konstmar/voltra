@@ -174,8 +174,9 @@ private fun resolveArgb(
 ): Int? = JSColorParser.parse(value, key)?.resolveColor(context)?.toArgb()
 
 /**
- * Resolves the gradient color list. An entry that cannot be parsed drops the whole gradient, so
- * the arc falls back to the solid `color` instead of silently rendering different stops.
+ * Resolves the gradient color list, picking each `{ day, night }` entry's side by the scheme. An
+ * entry that cannot be parsed drops the whole gradient, so the arc falls back to the solid `color`
+ * instead of silently rendering different stops.
  */
 @Composable
 private fun resolveGradientColors(
@@ -183,6 +184,6 @@ private fun resolveGradientColors(
     context: Context,
 ): List<Int> {
     val values = parseColorStringList(json) ?: return emptyList()
-    val resolved = values.map { resolveArgb(it, context) }
+    val resolved = values.map { resolveArgb(it, context, "gradientColors") }
     return if (resolved.any { it == null }) emptyList() else resolved.filterNotNull()
 }

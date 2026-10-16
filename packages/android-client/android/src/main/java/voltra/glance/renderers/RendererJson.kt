@@ -10,6 +10,7 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import voltra.parsing.toDynamicObject
 import voltra.parsing.toDynamicValue
 
@@ -87,11 +88,24 @@ internal fun parseForegroundStyleScaleEntries(json: String?): List<List<String>>
     }
 }
 
-/** Parses a JSON-encoded array of color strings, such as the arc indicator's `gradientColors`. */
-internal fun parseColorStringList(json: String?): List<String>? {
+/**
+ * Parses a JSON-encoded array of colors, such as the arc indicator's `gradientColors`. Each element
+ * is a color string or a `{ day, night }` pair, returned as a `String` or a `Map` ready for
+ * `JSColorParser.parse`. Any other element fails the whole list.
+ */
+internal fun parseColorStringList(json: String?): List<Any>? {
     if (json.isNullOrEmpty()) return null
     return try {
-        rendererJson.decodeFromString(ListSerializer(String.serializer()), json)
+        val array =
+            rendererJson.parseToJsonElement(json) as? JsonArray
+                ?: throw SerializationException("Expected a JSON array of colors")
+        array.map { element ->
+            when {
+                element is JsonObject -> element.toDynamicObject()
+                element is JsonPrimitive && element.isString -> element.content
+                else -> throw SerializationException("Expected a color string or a { day, night } object, got $element")
+            }
+        }
     } catch (error: Exception) {
         warn("Failed to parse color list", error)
         null
