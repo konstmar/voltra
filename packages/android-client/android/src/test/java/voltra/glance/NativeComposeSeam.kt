@@ -9,6 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageView
+import android.widget.ProgressBar
 import android.widget.RemoteViews
 import android.widget.TextView
 import androidx.compose.runtime.Composable
@@ -118,6 +119,10 @@ fun View.backgroundColors(): List<Int> = descendants().mapNotNull { (it.backgrou
 /** The current text colour (ARGB) of every `TextView`, keyed by its text. */
 fun View.textColors(): Map<String, Int> =
     descendants().filterIsInstance<TextView>().associate { it.text.toString() to it.currentTextColor }
+
+/** The progress tint (ARGB) of every `ProgressBar` that has one, depth first. Glance sets it from API 31. */
+fun View.progressTints(): List<Int> =
+    descendants().filterIsInstance<ProgressBar>().mapNotNull { it.progressTintList?.defaultColor }.toList()
 
 /** Bitmaps shown by `ImageView`s in the tree, depth first. Pixels need `@GraphicsMode(NATIVE)`. */
 fun View.imageBitmaps(): List<Bitmap> =
