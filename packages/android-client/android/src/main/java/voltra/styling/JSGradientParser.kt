@@ -1,6 +1,5 @@
 package voltra.styling
 
-import android.util.Log
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -51,26 +50,16 @@ object JSGradientParser {
     fun parsePair(
         pair: Map<*, *>,
         key: String? = null,
-    ): Pair<BackgroundImageValue, BackgroundImageValue>? {
-        val day = (pair["day"] as? String)?.let { parse(it) }
-        val night = (pair["night"] as? String)?.let { parse(it) }
-        if (day != null && night != null) return day to night
-
-        val side = if (day == null) "day" else "night"
-        val value = pair[side]
-        val got =
-            when {
-                side !in pair -> "nothing"
-                value is String -> "\"$value\""
-                else -> value.toString()
-            }
-        Log.w(
-            TAG,
-            "Ignoring invalid gradient pair${key?.let { " for $it" } ?: ""}: " +
-                "$side must be a CSS gradient string, got $got",
+    ): Pair<BackgroundImageValue, BackgroundImageValue>? =
+        parseDayNightPair(
+            pair,
+            key,
+            tag = TAG,
+            kind = "gradient",
+            expected = "a CSS gradient string",
+            parseSide = { side -> (side as? String)?.let { parse(it) } },
+            combine = { day, night -> day to night },
         )
-        return null
-    }
 
     private fun parseLinear(value: String): BackgroundImageValue? {
         val content = extractContent(value, "linear-gradient(") ?: return null

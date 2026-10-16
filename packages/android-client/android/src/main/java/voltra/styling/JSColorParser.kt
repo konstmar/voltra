@@ -37,34 +37,21 @@ object JSColorParser {
     private fun parsePair(
         pair: Map<*, *>,
         key: String?,
-    ): VoltraColorValue.DayNight? {
-        val day = parsePairSide(pair["day"])
-        val night = parsePairSide(pair["night"])
-        if (day != null && night != null) return VoltraColorValue.DayNight(day = day, night = night)
-
-        val side = if (day == null) "day" else "night"
-        Log.w(
-            TAG,
-            "Ignoring invalid color pair${key?.let { " for $it" } ?: ""}: " +
-                "$side must be a literal color string, got ${describe(pair[side], side in pair)}",
+    ): VoltraColorValue.DayNight? =
+        parseDayNightPair(
+            pair,
+            key,
+            tag = TAG,
+            kind = "color",
+            expected = "a literal color string",
+            parseSide = ::parsePairSide,
+            combine = VoltraColorValue::DayNight,
         )
-        return null
-    }
 
     private fun parsePairSide(value: Any?): Color? {
         val string = (value as? String)?.trim()?.lowercase()?.takeIf { it.isNotEmpty() } ?: return null
         return (parseString(string, warn = false) as? VoltraColorValue.Static)?.color
     }
-
-    private fun describe(
-        value: Any?,
-        present: Boolean,
-    ): String =
-        when {
-            !present -> "nothing"
-            value is String -> "\"$value\""
-            else -> value.toString()
-        }
 
     private fun parseString(
         string: String,
