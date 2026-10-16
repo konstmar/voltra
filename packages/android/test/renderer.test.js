@@ -392,3 +392,22 @@ test('registers one style object holding a colour pair once when it is reference
     [0, 0]
   )
 })
+
+test('passes a component colour prop pair through to the payload as a { day, night } object', () => {
+  const pair = { day: '#000000', night: '#ffffff' }
+  const tree = React.createElement(
+    VoltraAndroid.Column,
+    null,
+    React.createElement(VoltraAndroid.Text, { color: pair }, 'Hi'),
+    React.createElement(VoltraAndroid.FilledButton, { text: 'Go', backgroundColor: pair, contentColor: pair }),
+    React.createElement(VoltraAndroid.ArcProgressIndicator, { progress: 0.5, color: pair, trackColor: pair })
+  )
+
+  const [text, button, arc] = android.renderAndroidVariantToJson(tree).c
+
+  assert.deepEqual(text.p, { c: pair })
+  assert.deepEqual(button.p.bg, pair)
+  assert.deepEqual(button.p.cc, pair)
+  assert.deepEqual(arc.p.c, pair)
+  assert.deepEqual(arc.p.trc, pair)
+})
