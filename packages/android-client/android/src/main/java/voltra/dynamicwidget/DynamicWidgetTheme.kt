@@ -119,8 +119,10 @@ internal class DynamicWidgetTheme(
                     }
 
                     else -> {
+                        // The night side is parsed only once the day side is valid, so a role broken
+                        // on both sides costs no more warnings than one broken on a single side.
                         val dayColor = literalColor(dayValue)
-                        val nightColor = literalColor(nightValue)
+                        val nightColor = dayColor?.let { literalColor(nightValue) }
                         if (dayColor != null && nightColor != null) return dayColor to nightColor
                         val side = if (dayColor == null) "day" else "night"
                         "its $side value ${if (dayColor == null) dayValue else nightValue} is not a literal color"

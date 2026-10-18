@@ -138,6 +138,23 @@ class DynamicWidgetThemeTest {
     }
 
     @Test
+    fun aRoleMalformedOnBothSidesWarnsNoMoreThanOneMalformedOnOneSide() {
+        // The color parser adds its own warning for a malformed hex until it has a quiet path, so
+        // compare the two cases rather than asserting a total.
+        fun warningsFor(json: String): List<String> {
+            ShadowLog.clear()
+            DynamicWidgetTheme.parse(json)
+            return warnings()
+        }
+
+        val oneSide = warningsFor("""{"day":{"primary":"#zzzzzz"},"night":{"primary":"#00FF00"}}""")
+        val bothSides = warningsFor("""{"day":{"primary":"#zzzzzz"},"night":{"primary":"#yyyyyy"}}""")
+
+        assertEquals(oneSide.size, bothSides.size)
+        assertEquals(1, bothSides.count { it.startsWith("Ignoring theme role primary") })
+    }
+
+    @Test
     fun aDroppedRoleLeavesTheOtherRolesThemed() {
         val theme =
             DynamicWidgetTheme.parse(
