@@ -7,7 +7,7 @@ import {
   type WidgetEnvironment,
 } from '@use-voltra/android'
 
-// The colours the role tokens below resolve to. Roles left out keep the default palette.
+// The colors the role tokens below resolve to. Roles left out keep the default palette.
 // `dynamicColors: false` lets the theme win over the system's dynamic palette on Android 12+ too,
 // so the theme is visible on the API 35 emulator; leave it out to keep Material You there and use
 // the theme only below Android 12.

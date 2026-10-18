@@ -14,10 +14,10 @@ import voltra.styling.VoltraThemeColorRole
 import voltra.styling.toColorProvider
 
 /**
- * A Dynamic Widget's `theme` export: a day and a night colour for any of the
+ * A Dynamic Widget's `theme` export: a day and a night color for any of the
  * [VoltraThemeColorRole]s, named as in `AndroidDynamicColors` (`primary`, `onPrimary`, …).
  *
- * Only a role with a colour on both sides is themed; every other role keeps the palette the
+ * Only a role with a color on both sides is themed; every other role keeps the palette the
  * widget would have used without a theme.
  */
 internal class DynamicWidgetTheme(
@@ -71,7 +71,7 @@ internal class DynamicWidgetTheme(
          * A theme bug never blanks the widget, and each problem costs exactly one warning:
          * - a top level that isn't an object (which includes the strings Metro sends for a function,
          *   Symbol or unserialisable theme), or a `day`/`night` that isn't an object → no theme;
-         * - a role defined on one side only, or whose value on a side is not a literal colour (role
+         * - a role defined on one side only, or whose value on a side is not a literal color (role
          *   tokens and `{ day, night }` pairs included) → that role is left out.
          */
         fun parse(json: String?): DynamicWidgetTheme? {
@@ -101,7 +101,7 @@ internal class DynamicWidgetTheme(
             return DynamicWidgetTheme(pairs, dynamicColors = root.optBoolean("dynamicColors", true))
         }
 
-        /** The role's day and night colours, or null (with one warning when it was half-written). */
+        /** The role's day and night colors, or null (with one warning when it was half-written). */
         private fun rolePair(
             key: String,
             dayValue: Any?,
@@ -130,7 +130,7 @@ internal class DynamicWidgetTheme(
             return null
         }
 
-        /** A literal colour string; role tokens, pairs and other values are not. */
+        /** A literal color string; role tokens, pairs and other values are not. */
         private fun literalColor(value: Any): Color? =
             (value as? String)?.let { (JSColorParser.parse(it) as? VoltraColorValue.Static)?.color }
 

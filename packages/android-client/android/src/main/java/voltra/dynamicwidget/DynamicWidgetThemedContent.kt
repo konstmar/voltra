@@ -9,7 +9,7 @@ import voltra.models.VoltraNode
 
 /**
  * Renders a Dynamic Widget's [node] inside the theme its bundle exports ([themeJson], as read by
- * [VoltraJSRenderer.themeJSON]), so role tokens such as `~p` resolve to the theme's colours.
+ * [VoltraJSRenderer.themeJSON]), so role tokens such as `~p` resolve to the theme's colors.
  *
  * Without a theme, or from Android 12 when the theme leaves `dynamicColors` on, the node renders
  * exactly as it would without this wrapper. Roles the theme does not define keep the palette in

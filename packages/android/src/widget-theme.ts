@@ -1,13 +1,13 @@
 import type { AndroidDynamicColors } from './dynamic-colors.js'
 
-/** A colour role a Dynamic Widget theme can set: any key of {@link AndroidDynamicColors}. */
+/** A color role a Dynamic Widget theme can set: any key of {@link AndroidDynamicColors}. */
 export type AndroidThemeColorRole = keyof typeof AndroidDynamicColors
 
 /**
  * The `theme` a Dynamic Widget's entry module may export next to its default render function.
  *
- * Each side maps roles to literal colours (hex, `rgb()`, `hsl()` or a named colour). A role set on
- * both sides replaces that role's colour wherever the widget uses its token (`~p` for `primary`,
+ * Each side maps roles to literal colors (hex, `rgb()`, `hsl()` or a named color). A role set on
+ * both sides replaces that role's color wherever the widget uses its token (`~p` for `primary`,
  * for example); every other role keeps the default palette.
  */
 export type AndroidWidgetTheme = {
