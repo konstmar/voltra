@@ -141,7 +141,9 @@ import { AndroidDynamicColors, VoltraAndroid } from '@use-voltra/android'
 />
 ```
 
-Both sides are required, and each must be a gradient Android can draw. If either side is missing, empty or can't be parsed, the pair is dropped with one warning in Logcat, and `backgroundColor` shows instead, as it does for any gradient that can't be drawn.
+Both sides are required, and each must be a non-empty string. If either side is missing, empty or not a string, the whole pair is dropped with one warning in Logcat, and `backgroundColor` shows instead.
+
+Android parses only the side for the current theme. A typo in one side's gradient therefore shows only while that theme is active: that side is dropped like any gradient that can't be drawn, with `backgroundColor` showing instead, and the other side still draws.
 
 A gradient is drawn into a bitmap when the widget renders, in the colors of the theme at that moment, on every Android version. When the theme changes, Voltra redraws widgets while your app's process is alive; otherwise the gradient keeps the previous theme's colors until the widget's next update.
 
