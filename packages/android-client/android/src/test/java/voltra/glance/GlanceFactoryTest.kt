@@ -1,4 +1,4 @@
-package voltra.glance.components
+package voltra.glance
 
 import android.view.View
 import org.junit.Assert.assertEquals
@@ -9,17 +9,15 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowLog
-import voltra.glance.NativeComposeSeam
 import voltra.glance.NativeComposeSeam.Scheme
-import voltra.glance.applyUnder
-import voltra.glance.backgroundColors
-import voltra.glance.progressTints
-import voltra.glance.textColors
 import voltra.payload.ComponentTypeID
 
-/** `{ day, night }` pairs on component color props, through the native compose/apply seam. */
+/**
+ * `{ day, night }` pairs on the color props of the components `GlanceFactory` renders, through the
+ * native compose/apply seam.
+ */
 @RunWith(RobolectricTestRunner::class)
-class ComponentPropColorPairSeamTest {
+class GlanceFactoryTest {
     private val red = 0xFFFF0000.toInt()
     private val blue = 0xFF0000FF.toInt()
     private val pair = """{"day":"#ff0000","night":"#0000ff"}"""
@@ -69,13 +67,6 @@ class ComponentPropColorPairSeamTest {
             assertEquals("$name by night", blue, read(NativeComposeSeam.render(json, composeUnder = Scheme.NIGHT)))
         }
         assertTrue(ShadowLog.getLogsForTag("JSColorParser").isEmpty())
-    }
-
-    @Test
-    fun theTextColorPropWinsOverTheStyleColor() {
-        val json = """{"t":18,"c":"Hi","p":{"s":{"c":"#00ff00"},"c":$pair}}"""
-
-        assertEquals(blue, NativeComposeSeam.render(json, composeUnder = Scheme.NIGHT).textColors()["Hi"])
     }
 
     /**

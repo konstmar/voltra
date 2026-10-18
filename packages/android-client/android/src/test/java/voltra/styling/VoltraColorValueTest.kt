@@ -13,7 +13,7 @@ import voltra.glance.NativeComposeSeam.Scheme
 
 /** `resolveColor(context, themeColors)`: one concrete color per scheme, outside composition. */
 @RunWith(RobolectricTestRunner::class)
-class VoltraColorValueResolveTest {
+class VoltraColorValueTest {
     private val day = NativeComposeSeam.context(Scheme.DAY)
     private val night = NativeComposeSeam.context(Scheme.NIGHT)
 

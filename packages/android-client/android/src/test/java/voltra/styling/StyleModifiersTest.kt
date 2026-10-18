@@ -14,9 +14,12 @@ import voltra.glance.applyUnder
 import voltra.glance.backgroundColors
 import voltra.glance.textColors
 
-/** `{ day, night }` pairs on style color keys, through the native compose/apply seam. */
+/**
+ * `applyStyle` and `toGlanceTextStyle` with `{ day, night }` pairs on style color keys, through the
+ * native compose/apply seam.
+ */
 @RunWith(RobolectricTestRunner::class)
-class StyleColorPairSeamTest {
+class StyleModifiersTest {
     private val white = 0xFFFFFFFF.toInt()
     private val black = 0xFF000000.toInt()
 

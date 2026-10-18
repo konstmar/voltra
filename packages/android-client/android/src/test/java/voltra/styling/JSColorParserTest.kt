@@ -15,7 +15,7 @@ import org.robolectric.shadows.ShadowLog
  * pair is dropped as a whole with exactly one warning.
  */
 @RunWith(RobolectricTestRunner::class)
-class JSColorParserPairTest {
+class JSColorParserTest {
     @Before
     fun clearLogs() {
         ShadowLog.clear()
