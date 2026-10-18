@@ -22,7 +22,7 @@ import voltra.glance.renderers.RenderNode
 import voltra.glance.renderers.arc.ArcBitmapCache
 import voltra.glance.renderers.arc.ArcSpec
 import voltra.glance.renderers.arc.resolveArcSize
-import voltra.glance.renderers.parseColorValueList
+import voltra.glance.renderers.parseColorStringList
 import voltra.glance.resolveAndApplyStyle
 import voltra.glance.resolveElementStyle
 import voltra.models.VoltraElement
@@ -183,7 +183,7 @@ private fun resolveGradientColors(
     json: String?,
     context: Context,
 ): List<Int> {
-    val values = parseColorValueList(json) ?: return emptyList()
+    val values = parseColorStringList(json) ?: return emptyList()
     val resolved = values.map { resolveArgb(it, context, "gradientColors") }
     return if (resolved.any { it == null }) emptyList() else resolved.filterNotNull()
 }

@@ -102,9 +102,10 @@ internal fun parseForegroundStyleScaleEntries(json: String?): List<List<Any>>? {
 /**
  * Parses a JSON-encoded array of colors, such as the arc indicator's `gradientColors`. Each element
  * is a color string or a `{ day, night }` pair, returned as a `String` or a `Map` ready for
- * `JSColorParser.parse`. Any other element fails the whole list.
+ * `JSColorParser.parse`. Any other element fails the whole list. Despite the name, which predates
+ * color pairs, the elements are not all strings.
  */
-internal fun parseColorValueList(json: String?): List<Any>? {
+internal fun parseColorStringList(json: String?): List<Any>? {
     if (json.isNullOrEmpty()) return null
     return try {
         val array =
