@@ -257,6 +257,18 @@ describe('@use-voltra/metro manifest registry', () => {
 
       const theme = { day: { primary: '#6750A4' }, night: { primary: '#D0BCFF' }, dynamicColors: false }
       assert.deepEqual(JSON.parse(load({ theme }).getThemeJSON?.() ?? 'null'), theme)
+
+      // A theme JSON cannot carry becomes a JSON string, which the native validator rejects with a warning.
+      const themeJSONOf = (value: unknown) => JSON.parse(load({ theme: value }).getThemeJSON?.() ?? 'null')
+      assert.equal(
+        themeJSONOf(() => ({})),
+        'function'
+      )
+      assert.equal(themeJSONOf(Symbol('theme')), 'symbol')
+      const cyclic: Record<string, unknown> = { day: {} }
+      cyclic.night = cyclic
+      assert.match(themeJSONOf(cyclic), /circular/i)
+      assert.match(themeJSONOf({ day: { primary: 1n }, night: {} }), /BigInt/i)
     } finally {
       registry.close()
     }

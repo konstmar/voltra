@@ -356,6 +356,8 @@ function createGeneratedEntry(
   const widgetImport = isAndroid
     ? [`import * as WidgetModule from ${JSON.stringify(entryImportPath)}`, '', 'const Widget = WidgetModule.default']
     : [`import Widget from ${JSON.stringify(entryImportPath)}`]
+  // A theme JSON cannot carry is sent as a JSON string instead (its `typeof`, or the serialisation
+  // error), which the native side rejects with a warning: `console` is a no-op in the widget runtime.
   const themeExport = isAndroid
     ? [
         '',
@@ -364,7 +366,14 @@ function createGeneratedEntry(
         '  if (typeof theme === "undefined") {',
         '    return null',
         '  }',
-        '  return JSON.stringify(theme)',
+        '  if (typeof theme === "function" || typeof theme === "symbol") {',
+        '    return JSON.stringify(typeof theme)',
+        '  }',
+        '  try {',
+        '    return JSON.stringify(theme)',
+        '  } catch (error) {',
+        '    return JSON.stringify(error instanceof Error ? error.message : String(error))',
+        '  }',
         '}',
       ]
     : []
