@@ -89,22 +89,34 @@ class GradientBackgroundPairSeamTest {
         assertNotSame(day, renderUnder(Scheme.NIGHT))
     }
 
+    /** A fixed-size green Column whose style `backgroundImage` is [backgroundImage] (already JSON). */
+    private fun columnOverGreen(backgroundImage: String) =
+        """{"t":9,"p":{"s":{"w":40,"h":20,"bg":"#00ff00","bgi":$backgroundImage}},"c":{"t":18,"c":"Hi"}}"""
+
     @Test
-    fun anInvalidPairFallsBackToTheBackgroundColorAndNamesTheKey() {
-        val json =
-            """
-            {"t":9,"p":{"s":{"w":40,"h":20,"bg":"#00ff00",
-             "bgi":{"day":"linear-gradient(to right, #ff0000, #ff0000)","night":"not a gradient"}}},
-             "c":{"t":18,"c":"Hi"}}
-            """.trimIndent()
+    fun aStructurallyInvalidPairFallsBackToTheBackgroundColorWithOneWarning() {
+        val json = columnOverGreen("""{"day":"linear-gradient(to right, #ff0000, #ff0000)","night":7}""")
 
         val view = NativeComposeSeam.render(json, composeUnder = Scheme.DAY)
 
         assertEquals(emptyList<Bitmap>(), view.imageBitmaps())
         assertEquals(listOf(0xFF00FF00.toInt()), view.backgroundColors())
-        val warnings = ShadowLog.getLogsForTag("JSGradientParser")
-        assertTrue(warnings.isNotEmpty())
-        // Style conversion can run more than once per element, so count only what each warning says.
-        assertTrue(warnings.map { it.msg }.toString(), warnings.all { it.msg.contains("backgroundImage") })
+        val warnings = ShadowLog.getLogsForTag("JSGradientParser").map { it.msg }
+        assertEquals(warnings.toString(), 1, warnings.size)
+        assertTrue(warnings.single(), warnings.single().contains("backgroundImage"))
+    }
+
+    @Test
+    fun anUnparsableUnselectedSideDoesNotAffectTheSelectedOne() {
+        val json = columnOverGreen("""{"day":"linear-gradient(to right, #ff0000, #ff0000)","night":"not a gradient"}""")
+
+        val day = NativeComposeSeam.render(json, composeUnder = Scheme.DAY)
+        assertEquals(red, requireNotNull(day.imageBitmaps().singleOrNull()).centre())
+
+        // The night side fails like any unparsable gradient string: the background color shows.
+        val night = NativeComposeSeam.render(json, composeUnder = Scheme.NIGHT)
+        assertEquals(emptyList<Bitmap>(), night.imageBitmaps())
+        assertEquals(listOf(0xFF00FF00.toInt()), night.backgroundColors())
+        assertTrue(ShadowLog.getLogsForTag("JSGradientParser").isEmpty())
     }
 }

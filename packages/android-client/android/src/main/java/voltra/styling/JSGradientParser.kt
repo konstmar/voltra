@@ -44,21 +44,24 @@ object JSGradientParser {
     }
 
     /**
-     * Parses a `{ day, night }` pair of CSS gradient strings. Both sides must parse; anything else
-     * drops the whole pair with one warning naming [key].
+     * The CSS string of a `{ day, night }` gradient pair for the current scheme: [isNightMode]
+     * picks `night`, otherwise `day`. Both sides must be non-empty strings; anything else drops the
+     * whole pair with one warning naming [key]. The chosen side is not parsed here, so a typo in the
+     * other side never affects it.
      */
-    fun parsePair(
+    fun selectPairSide(
         pair: Map<*, *>,
         key: String,
-    ): VoltraBackgroundImage.DayNight? =
+        isNightMode: Boolean,
+    ): String? =
         parseDayNightPair(
             pair,
             key,
             tag = TAG,
             kind = "gradient",
             expected = "a CSS gradient string",
-            parseSide = { side -> (side as? String)?.let { parse(it) } },
-            combine = VoltraBackgroundImage::DayNight,
+            parseSide = { side -> (side as? String)?.takeIf { it.isNotBlank() } },
+            combine = { day, night -> if (isNightMode) night else day },
         )
 
     private fun parseLinear(value: String): BackgroundImageValue? {

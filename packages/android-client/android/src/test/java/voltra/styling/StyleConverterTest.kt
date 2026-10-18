@@ -12,8 +12,7 @@ class StyleConverterTest {
                 mapOf("backgroundImage" to "linear-gradient(to right, red, blue)"),
             )
 
-        val image = style.decoration.backgroundImage as? VoltraBackgroundImage.Single
-        assertTrue(image?.gradient is BackgroundImageValue.LinearGradient)
+        assertTrue(style.decoration.backgroundImage is BackgroundImageValue.LinearGradient)
     }
 
     @Test

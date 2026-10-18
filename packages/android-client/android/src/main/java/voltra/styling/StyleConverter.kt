@@ -14,11 +14,16 @@ object StyleConverter {
      * Returns CompositeStyle with all style categories parsed.
      *
      * Mirrors iOS: StyleConverter.convert(_ js: [String: Any])
+     *
+     * @param isNightMode which side of a `{ day, night }` `backgroundImage` pair to convert.
      */
-    fun convert(js: Map<String, Any?>): CompositeStyle =
+    fun convert(
+        js: Map<String, Any?>,
+        isNightMode: Boolean = false,
+    ): CompositeStyle =
         CompositeStyle(
             layout = parseLayout(js),
-            decoration = parseDecoration(js),
+            decoration = parseDecoration(js, isNightMode),
             rendering = parseRendering(js),
             text = parseText(js),
         )
@@ -128,7 +133,10 @@ object StyleConverter {
      * Parse decoration-related styles (background, border, shadow).
      * Uses expanded property names after decompression.
      */
-    private fun parseDecoration(js: Map<String, Any?>): DecorationStyle {
+    private fun parseDecoration(
+        js: Map<String, Any?>,
+        isNightMode: Boolean,
+    ): DecorationStyle {
         // Border Logic (borderWidth, borderColor)
         var border: BorderStyle? = null
         val borderWidth = JSStyleParser.dp(js["borderWidth"])
@@ -163,16 +171,16 @@ object StyleConverter {
         val overflow = JSStyleParser.overflow(js["overflow"])
         val clipToOutline = overflow == Overflow.HIDDEN
 
-        val backgroundImage =
+        // A whole-value pair picks its CSS string by the night bit; only that side is parsed.
+        val backgroundImageCss =
             when (val value = js["backgroundImage"]) {
-                is Map<*, *> -> JSGradientParser.parsePair(value, "backgroundImage")
-                is String -> JSGradientParser.parse(value)?.let { VoltraBackgroundImage.Single(it) }
-                else -> null
+                is Map<*, *> -> JSGradientParser.selectPairSide(value, "backgroundImage", isNightMode)
+                else -> value as? String
             }
 
         return DecorationStyle(
             backgroundColor = JSStyleParser.color(js["backgroundColor"], "backgroundColor"),
-            backgroundImage = backgroundImage,
+            backgroundImage = backgroundImageCss?.let { JSGradientParser.parse(it) },
             cornerRadius = JSStyleParser.dp(js["borderRadius"]),
             clipToOutline = clipToOutline,
             border = border,

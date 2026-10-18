@@ -174,23 +174,22 @@ private fun GlanceModifier.applyDecoration(
     var modifier = this
 
     // A. Background image or color
-    val context = LocalContext.current
-    val backgroundImage = decoration.backgroundImage?.resolveGradient(context)
-    if (backgroundImage != null) {
+    if (decoration.backgroundImage != null) {
+        val context = LocalContext.current
         val backgroundArgb = decoration.backgroundColor?.resolveColor(context)?.toArgb() ?: 0x00000000
         val colors =
-            backgroundImage.stops
+            decoration.backgroundImage.stops
                 .map { it.color.resolveColor(context).toArgb() }
                 .toIntArray()
         val positions =
-            backgroundImage.stops
+            decoration.backgroundImage.stops
                 .map { it.location.coerceIn(0f, 1f) }
                 .toFloatArray()
         try {
             val bitmap =
                 renderGradientBitmap(
                     context = context,
-                    gradient = backgroundImage,
+                    gradient = decoration.backgroundImage,
                     layout = layout,
                     widgetSize = widgetSize,
                     backgroundArgb = backgroundArgb,
