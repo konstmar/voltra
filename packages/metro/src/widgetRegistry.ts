@@ -350,10 +350,29 @@ function createGeneratedEntry(
     path.relative(generatedEntryRoot, path.join(generatedRoot, RENDER_SHIM_BASENAME))
   )
 
+  // Android also reads the module's optional `theme` export, so it imports the namespace: a missing
+  // named export is then `undefined` rather than a link error under real ESM.
+  const isAndroid = widget.platform === 'android'
+  const widgetImport = isAndroid
+    ? [`import * as WidgetModule from ${JSON.stringify(entryImportPath)}`, '', 'const Widget = WidgetModule.default']
+    : [`import Widget from ${JSON.stringify(entryImportPath)}`]
+  const themeExport = isAndroid
+    ? [
+        '',
+        'export function getThemeJSON() {',
+        '  const theme = WidgetModule.theme',
+        '  if (typeof theme === "undefined") {',
+        '    return null',
+        '  }',
+        '  return JSON.stringify(theme)',
+        '}',
+      ]
+    : []
+
   const content = [
     "import { createElement } from 'react'",
     `import { renderVariantToJson } from ${JSON.stringify(renderShimImportPath)}`,
-    `import Widget from ${JSON.stringify(entryImportPath)}`,
+    ...widgetImport,
     '',
     `if (typeof Widget === 'undefined') {`,
     `  throw new Error(${JSON.stringify(
@@ -382,6 +401,7 @@ function createGeneratedEntry(
     '  const resolved = renderVariantToJson(createElement(WidgetWithEnv, { __voltraProps: props }))',
     '  return JSON.stringify(resolved)',
     '}',
+    ...themeExport,
     '',
     'export default render',
     '',
