@@ -11,7 +11,7 @@ Your Dynamic Widget can react to:
 - `env.colorScheme`
 - `env.locale`, `env.preferredLanguages`, `env.hourCycle`, `env.timeZone` and the other [locale fields](/android/development/localization)
 - `env.configuration`
-- `AndroidDynamicColors` tokens, which resolve to the current Material You palette natively
+- `AndroidDynamicColors` tokens, which resolve natively through the widget's theme: the Material You palette by default, or [a `theme` the module exports](/android/development/dynamic-colors#theming-a-dynamic-widget)
 
 When you change `app.json`, run Expo Prebuild or Voltra Apply so the updated Dynamic Widget configuration is available on device. If you change only the Dynamic Widget JS, reopen the app in development and the Dynamic Widget updates automatically.
 
@@ -38,9 +38,10 @@ module.exports = withVoltra(config)
 
 1. Add an Android Dynamic Widget declaration to `app.json` with an `id`, an `entry`, and any Dynamic Widget metadata you need.
 2. Default-export the Dynamic Widget function or component from the module named by `entry`.
-3. Use `initialStatePath` if you want a pre-rendered first view.
-4. Re-run Expo Prebuild or Voltra Apply after updating `app.json`.
-5. Keep Android and iOS Dynamic Widget declarations separate; the same `id` can exist on both platforms because each platform is configured separately.
+3. Optionally export a named `theme` from the same module to choose the colors `AndroidDynamicColors` tokens resolve to. See [Theming a Dynamic Widget](/android/development/dynamic-colors#theming-a-dynamic-widget).
+4. Use `initialStatePath` if you want a pre-rendered first view.
+5. Re-run Expo Prebuild or Voltra Apply after updating `app.json`.
+6. Keep Android and iOS Dynamic Widget declarations separate; the same `id` can exist on both platforms because each platform is configured separately.
 
 ```tsx
 // widgets/android/inbox-widget.tsx
@@ -233,6 +234,12 @@ The Home Screen's own edit gesture does not open a Voltra configuration screen y
 
 Dynamic Widget props are app-owned state passed as the entry component's first argument. Configuration values are declared through `appIntent.parameters`, updated in-app with `setWidgetConfiguration` for every placement or `setWidgetInstanceConfiguration` for one, and read from `env.configuration`. Updating one does not replace the other.
 
+## Colors in light and dark
+
+Give colors as `AndroidDynamicColors` tokens or as [`{ day, night }` pairs](/android/development/styling#day-and-night-colors), not by branching on `env.colorScheme`. Android resolves tokens and pairs when it draws the widget, so they follow the system's light or dark setting without running your JavaScript again. On Android 12 and later the launcher switches them itself, even while your app is not running.
+
+`env.colorScheme` is only as current as the widget's last render, so a color chosen from it can lag behind the system setting. Use it only when the layout itself changes with the scheme, such as showing a different image. See [#263](https://github.com/callstackincubator/voltra/issues/263) for how Dynamic Widgets re-render on a scheme change.
+
 ## Localization
 
 Pass `env.locale` and `env.hourCycle` to every `Intl` and `toLocale*` call, and pick a translation with `resolveLocale(env, messages)`. `Intl.PluralRules`, `Intl.RelativeTimeFormat`, `Intl.ListFormat` and `Intl.DisplayNames` are not available in Android widgets unless you add the polyfills. See [Localization](/android/development/localization) for the polyfills, every locale field, and how to let the app choose the widget language.
@@ -242,5 +249,5 @@ Pass `env.locale` and `env.hourCycle` to every `Intl` and `toLocale*` call, and 
 - There is no `export` field in app.json for Dynamic Widgets.
 - The default-exported Dynamic Widget function or component name does not need to match the widget `id`.
 - Use a real device to verify release rendering.
-- `initialStatePath` gives the Dynamic Widget a pre-rendered first view.
+- `initialStatePath` gives the Dynamic Widget a pre-rendered first view. That view does not use the module's `theme`.
 - To use Glance modifiers that `style` does not cover, such as `semantics` or `appWidgetBackground`, see [Native modifiers](/android/development/native-modifiers).
