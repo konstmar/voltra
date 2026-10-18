@@ -21,6 +21,10 @@ import android.util.Log
  * [themeJSON] always describes the bundle [render] runs.
  */
 object VoltraJSRenderer {
+    // Internal so VoltraJSRendererCore can log under it; a const is inlined, so reading it never
+    // loads the native library.
+    internal const val TAG = "VoltraJSRenderer"
+
     init {
         System.loadLibrary("voltra_js_renderer")
     }
@@ -110,33 +114,6 @@ internal class VoltraJSRendererCore(
     private val themes = HashMap<String, String>()
 
     /**
-     * Minimal global shims. The widget Metro bundle runs in a *bare* Hermes runtime (no RN
-     * preamble — the widget Metro config strips polyfills), but React's dev build and a few
-     * helpers reference `console` / timers that Hermes does not define out of the box. JSC
-     * (iOS) happened to tolerate their absence; Hermes does not, so we inject no-op stand-ins
-     * before the bundle. Voltra's renderer is fully synchronous, so timers are never actually
-     * needed during a render — the no-ops exist only so references don't throw.
-     */
-    private val globalShims =
-        """
-        (function (g) {
-          if (typeof g.console === 'undefined') {
-            var noop = function () {};
-            g.console = {
-              log: noop, info: noop, warn: noop, error: noop, debug: noop, trace: noop,
-              group: noop, groupCollapsed: noop, groupEnd: noop, table: noop, assert: noop,
-              dir: noop, count: noop, time: noop, timeEnd: noop
-            };
-          }
-          if (typeof g.setTimeout === 'undefined') { g.setTimeout = function () { return 0; }; }
-          if (typeof g.clearTimeout === 'undefined') { g.clearTimeout = function () {}; }
-          if (typeof g.setInterval === 'undefined') { g.setInterval = function () { return 0; }; }
-          if (typeof g.clearInterval === 'undefined') { g.clearInterval = function () {}; }
-          if (typeof g.setImmediate === 'undefined') { g.setImmediate = function () { return 0; }; }
-        })(typeof globalThis !== 'undefined' ? globalThis : this);
-        """.trimIndent()
-
-    /**
      * Evaluate a widget bundle and capture its `render(props, env)` export, then read its theme.
      *
      * The raw bundle ends with Metro's entry invocation `__r(<entryId>);`. We re-invoke that
@@ -151,7 +128,7 @@ internal class VoltraJSRendererCore(
             val entryModuleId = extractEntryModuleId(source) ?: 0
             val wrapped =
                 buildString {
-                    append(globalShims)
+                    append(GLOBAL_SHIMS)
                     append('\n')
                     append(source)
                     append('\n')
@@ -228,6 +205,33 @@ internal class VoltraJSRendererCore(
             "\""
 
     private companion object {
-        private const val TAG = "VoltraJSRenderer"
+        private const val TAG = VoltraJSRenderer.TAG
+
+        /**
+         * Minimal global shims. The widget Metro bundle runs in a *bare* Hermes runtime (no RN
+         * preamble — the widget Metro config strips polyfills), but React's dev build and a few
+         * helpers reference `console` / timers that Hermes does not define out of the box. JSC
+         * (iOS) happened to tolerate their absence; Hermes does not, so we inject no-op stand-ins
+         * before the bundle. Voltra's renderer is fully synchronous, so timers are never actually
+         * needed during a render — the no-ops exist only so references don't throw.
+         */
+        private val GLOBAL_SHIMS =
+            """
+            (function (g) {
+              if (typeof g.console === 'undefined') {
+                var noop = function () {};
+                g.console = {
+                  log: noop, info: noop, warn: noop, error: noop, debug: noop, trace: noop,
+                  group: noop, groupCollapsed: noop, groupEnd: noop, table: noop, assert: noop,
+                  dir: noop, count: noop, time: noop, timeEnd: noop
+                };
+              }
+              if (typeof g.setTimeout === 'undefined') { g.setTimeout = function () { return 0; }; }
+              if (typeof g.clearTimeout === 'undefined') { g.clearTimeout = function () {}; }
+              if (typeof g.setInterval === 'undefined') { g.setInterval = function () { return 0; }; }
+              if (typeof g.clearInterval === 'undefined') { g.clearInterval = function () {}; }
+              if (typeof g.setImmediate === 'undefined') { g.setImmediate = function () { return 0; }; }
+            })(typeof globalThis !== 'undefined' ? globalThis : this);
+            """.trimIndent()
     }
 }
