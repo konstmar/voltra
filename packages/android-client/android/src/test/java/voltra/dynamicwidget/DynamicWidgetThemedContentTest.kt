@@ -40,7 +40,7 @@ class DynamicWidgetThemedContentTest {
     @Config(sdk = [31])
     fun fromAndroid12TheSystemPaletteWinsUnlessTheThemeTurnsDynamicColorsOff() {
         for (scheme in Scheme.entries) {
-            val outer = textColor(primaryText, themeJson = null, scheme)
+            val outer = textColor(primaryText, themeJSON = null, scheme)
 
             assertNotEquals("$scheme", themeDay, outer)
             assertNotEquals("$scheme", themeNight, outer)
@@ -61,7 +61,7 @@ class DynamicWidgetThemedContentTest {
         for (scheme in Scheme.entries) {
             assertEquals(
                 "$scheme",
-                textColor(secondaryText, themeJson = null, scheme),
+                textColor(secondaryText, themeJSON = null, scheme),
                 textColor(secondaryText, themeOverDynamicColors, scheme),
             )
         }
@@ -70,9 +70,9 @@ class DynamicWidgetThemedContentTest {
     @Test
     @Config(sdk = [26, 31])
     fun aLiteralColorStaysAsWrittenUnderAnyTheme() {
-        for (themeJson in listOf(theme, themeOverDynamicColors)) {
+        for (themeJSON in listOf(theme, themeOverDynamicColors)) {
             for (scheme in Scheme.entries) {
-                assertEquals("$scheme $themeJson", 0xFFFF0000.toInt(), textColor(redText, themeJson, scheme))
+                assertEquals("$scheme $themeJSON", 0xFFFF0000.toInt(), textColor(redText, themeJSON, scheme))
             }
         }
     }
@@ -92,12 +92,12 @@ class DynamicWidgetThemedContentTest {
     fun aMalformedThemeRendersWithTheDefaultPaletteLikeNoTheme() {
         val malformed = listOf("\"function\"", """{"day":"#123456","night":{}}""", "not json")
 
-        for (themeJson in malformed) {
+        for (themeJSON in malformed) {
             for (scheme in Scheme.entries) {
                 assertEquals(
-                    "$scheme $themeJson",
-                    textColor(primaryText, themeJson = null, scheme),
-                    textColor(primaryText, themeJson, scheme),
+                    "$scheme $themeJSON",
+                    textColor(primaryText, themeJSON = null, scheme),
+                    textColor(primaryText, themeJSON, scheme),
                 )
             }
         }
@@ -114,24 +114,24 @@ class DynamicWidgetThemedContentTest {
                     .textColors()
 
             assertNotNull("$scheme", today["Hi"])
-            assertEquals("$scheme", today["Hi"], textColor(primaryText, themeJson = null, scheme))
+            assertEquals("$scheme", today["Hi"], textColor(primaryText, themeJSON = null, scheme))
         }
     }
 
     private fun textColor(
         json: String,
-        themeJson: String?,
+        themeJSON: String?,
         scheme: Scheme,
-    ): Int? = render(json, themeJson, scheme).textColors()["Hi"]
+    ): Int? = render(json, themeJSON, scheme).textColors()["Hi"]
 
     /** Composes and applies under the same [scheme], as a widget update in that scheme would. */
     private fun render(
         json: String,
-        themeJson: String?,
+        themeJSON: String?,
         scheme: Scheme,
     ) = run {
         val node = NativeComposeSeam.node(json)
         val factory = GlanceFactory("seam", widgetSize = NativeComposeSeam.DEFAULT_SIZE)
-        NativeComposeSeam.compose(scheme) { DynamicWidgetThemedContent(themeJson, node, factory) }.applyUnder(scheme)
+        NativeComposeSeam.compose(scheme) { DynamicWidgetThemedContent(themeJSON, node, factory) }.applyUnder(scheme)
     }
 }

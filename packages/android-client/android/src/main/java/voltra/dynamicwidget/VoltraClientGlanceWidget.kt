@@ -335,7 +335,7 @@ class VoltraClientGlanceWidget(
             // provideGlance: a live session outlives a re-evaluation, and the renderer swaps the
             // theme in step with the bundle. The placeholder never sees it.
             DynamicWidgetThemedContent(
-                themeJson = if (liveNode != null) VoltraJSRenderer.themeJSON(widgetId) else null,
+                themeJSON = if (liveNode != null) VoltraJSRenderer.themeJSON(widgetId) else null,
                 node = node,
                 factory = GlanceFactory(widgetId, null, null, size),
             )

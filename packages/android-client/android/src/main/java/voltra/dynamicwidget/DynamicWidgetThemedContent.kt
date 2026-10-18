@@ -8,7 +8,7 @@ import voltra.glance.GlanceFactory
 import voltra.models.VoltraNode
 
 /**
- * Renders a Dynamic Widget's [node] inside the theme its bundle exports ([themeJson], as read by
+ * Renders a Dynamic Widget's [node] inside the theme its bundle exports ([themeJSON], as read by
  * [VoltraJSRenderer.themeJSON]), so role tokens such as `~p` resolve to the theme's colors.
  *
  * Without a theme, or from Android 12 when the theme leaves `dynamicColors` on, the node renders
@@ -17,11 +17,11 @@ import voltra.models.VoltraNode
  */
 @Composable
 internal fun DynamicWidgetThemedContent(
-    themeJson: String?,
+    themeJSON: String?,
     node: VoltraNode,
     factory: GlanceFactory,
 ) {
-    val theme = remember(themeJson) { DynamicWidgetTheme.parse(themeJson) }
+    val theme = remember(themeJSON) { DynamicWidgetTheme.parse(themeJSON) }
     val systemPaletteWins = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && theme?.dynamicColors == true
     if (theme == null || systemPaletteWins) {
         factory.Render(node)
