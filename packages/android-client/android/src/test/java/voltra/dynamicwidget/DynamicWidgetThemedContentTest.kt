@@ -1,6 +1,7 @@
 package voltra.dynamicwidget
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -10,19 +11,80 @@ import voltra.glance.GlanceFactory
 import voltra.glance.NativeComposeSeam
 import voltra.glance.NativeComposeSeam.Scheme
 import voltra.glance.applyUnder
+import voltra.glance.backgroundColors
 import voltra.glance.textColors
 
 /** The theme a Dynamic Widget exports, applied around its rendered node, through the compose/apply seam. */
 @RunWith(RobolectricTestRunner::class)
 class DynamicWidgetThemedContentTest {
     private val primaryText = """{"t":18,"c":"Hi","p":{"s":{"c":"~p"}}}"""
+    private val secondaryText = """{"t":18,"c":"Hi","p":{"s":{"c":"~s"}}}"""
+    private val redText = """{"t":18,"c":"Hi","p":{"s":{"c":"#ff0000"}}}"""
+    private val primaryBackgroundModifier =
+        """{"t":18,"c":"Hi","p":{"mods":"[{\"${'$'}type\":\"background\",\"color\":\"~p\"}]"}}"""
+
+    private val themeDay = 0xFF123456.toInt()
+    private val themeNight = 0xFFABCDEF.toInt()
     private val theme = """{"day":{"primary":"#123456"},"night":{"primary":"#abcdef"}}"""
+    private val themeOverDynamicColors =
+        """{"day":{"primary":"#123456"},"night":{"primary":"#abcdef"},"dynamicColors":false}"""
 
     @Test
     @Config(sdk = [26])
     fun aPrimaryTokenTakesTheThemesDayOrNightPrimaryBeforeAndroid12() {
-        assertEquals(0xFF123456.toInt(), primaryTextColor(theme, Scheme.DAY))
-        assertEquals(0xFFABCDEF.toInt(), primaryTextColor(theme, Scheme.NIGHT))
+        assertEquals(themeDay, textColor(primaryText, theme, Scheme.DAY))
+        assertEquals(themeNight, textColor(primaryText, theme, Scheme.NIGHT))
+    }
+
+    @Test
+    @Config(sdk = [31])
+    fun fromAndroid12TheSystemPaletteWinsUnlessTheThemeTurnsDynamicColorsOff() {
+        for (scheme in Scheme.entries) {
+            val outer = textColor(primaryText, themeJson = null, scheme)
+
+            assertNotEquals("$scheme", themeDay, outer)
+            assertNotEquals("$scheme", themeNight, outer)
+            assertEquals("$scheme", outer, textColor(primaryText, theme, scheme))
+        }
+    }
+
+    @Test
+    @Config(sdk = [26, 31])
+    fun withDynamicColorsOffThePrimaryTokenTakesTheThemeOnEveryApiLevel() {
+        assertEquals(themeDay, textColor(primaryText, themeOverDynamicColors, Scheme.DAY))
+        assertEquals(themeNight, textColor(primaryText, themeOverDynamicColors, Scheme.NIGHT))
+    }
+
+    @Test
+    @Config(sdk = [26, 31])
+    fun rolesTheThemeLeavesOutKeepTheOuterPalette() {
+        for (scheme in Scheme.entries) {
+            assertEquals(
+                "$scheme",
+                textColor(secondaryText, themeJson = null, scheme),
+                textColor(secondaryText, themeOverDynamicColors, scheme),
+            )
+        }
+    }
+
+    @Test
+    @Config(sdk = [26, 31])
+    fun aLiteralColorStaysAsWrittenUnderAnyTheme() {
+        for (themeJson in listOf(theme, themeOverDynamicColors)) {
+            for (scheme in Scheme.entries) {
+                assertEquals("$scheme $themeJson", 0xFFFF0000.toInt(), textColor(redText, themeJson, scheme))
+            }
+        }
+    }
+
+    @Test
+    @Config(sdk = [26, 31])
+    fun aRoleTokenInANativeModifierPicksUpTheTheme() {
+        for ((scheme, expected) in listOf(Scheme.DAY to themeDay, Scheme.NIGHT to themeNight)) {
+            val background = render(primaryBackgroundModifier, themeOverDynamicColors, scheme).backgroundColors()
+
+            assertEquals("$scheme", listOf(expected), background)
+        }
     }
 
     @Test
@@ -36,17 +98,24 @@ class DynamicWidgetThemedContentTest {
                     .textColors()
 
             assertNotNull("$scheme", today["Hi"])
-            assertEquals("$scheme", today["Hi"], primaryTextColor(themeJson = null, scheme))
+            assertEquals("$scheme", today["Hi"], textColor(primaryText, themeJson = null, scheme))
         }
     }
 
-    private fun primaryTextColor(
+    private fun textColor(
+        json: String,
         themeJson: String?,
         scheme: Scheme,
-    ): Int? {
-        val node = NativeComposeSeam.node(primaryText)
+    ): Int? = render(json, themeJson, scheme).textColors()["Hi"]
+
+    /** Composes and applies under the same [scheme], as a widget update in that scheme would. */
+    private fun render(
+        json: String,
+        themeJson: String?,
+        scheme: Scheme,
+    ) = run {
+        val node = NativeComposeSeam.node(json)
         val factory = GlanceFactory("seam", widgetSize = NativeComposeSeam.DEFAULT_SIZE)
-        val views = NativeComposeSeam.compose(scheme) { DynamicWidgetThemedContent(themeJson, node, factory) }
-        return views.applyUnder(scheme).textColors()["Hi"]
+        NativeComposeSeam.compose(scheme) { DynamicWidgetThemedContent(themeJson, node, factory) }.applyUnder(scheme)
     }
 }
