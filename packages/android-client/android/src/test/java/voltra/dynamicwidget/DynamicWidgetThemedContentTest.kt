@@ -88,6 +88,22 @@ class DynamicWidgetThemedContentTest {
     }
 
     @Test
+    @Config(sdk = [26, 31])
+    fun aMalformedThemeRendersWithTheDefaultPaletteLikeNoTheme() {
+        val malformed = listOf("\"function\"", """{"day":"#123456","night":{}}""", "not json")
+
+        for (themeJson in malformed) {
+            for (scheme in Scheme.entries) {
+                assertEquals(
+                    "$scheme $themeJson",
+                    textColor(primaryText, themeJson = null, scheme),
+                    textColor(primaryText, themeJson, scheme),
+                )
+            }
+        }
+    }
+
+    @Test
     @Config(sdk = [26])
     fun withoutAThemeTheWidgetRendersAsItDoesToday() {
         for (scheme in Scheme.entries) {

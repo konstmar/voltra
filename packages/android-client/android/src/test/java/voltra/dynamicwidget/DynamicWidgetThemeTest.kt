@@ -73,6 +73,85 @@ class DynamicWidgetThemeTest {
         assertTrue(theme.dynamicColors)
     }
 
+    @Test
+    fun aThemeThatIsNotAnObjectIsIgnoredWithOneWarning() {
+        // The first three are the strings Metro sends for a function, a Symbol and a cyclic theme.
+        val cases =
+            listOf(
+                "\"function\"",
+                "\"symbol\"",
+                "\"Converting circular structure to JSON\"",
+                "[]",
+                "42",
+                "null",
+                "not json",
+            )
+
+        for (json in cases) {
+            ShadowLog.clear()
+
+            assertNull(json, DynamicWidgetTheme.parse(json))
+            assertEquals(json, 1, warnings().size)
+        }
+    }
+
+    @Test
+    fun aThemeWhoseDayOrNightIsNotAnObjectIsIgnoredWithOneWarning() {
+        val cases =
+            listOf(
+                """{"day":"#ffffff","night":{}}""",
+                """{"day":{},"night":["#000000"]}""",
+                """{"day":{}}""",
+                """{"night":{}}""",
+            )
+
+        for (json in cases) {
+            ShadowLog.clear()
+
+            assertNull(json, DynamicWidgetTheme.parse(json))
+            assertEquals(json, 1, warnings().size)
+        }
+    }
+
+    @Test
+    fun aRoleThatCannotBeUsedOnBothSidesIsDroppedWithOneWarning() {
+        val cases =
+            mapOf(
+                "one-sided" to """{"day":{"primary":"#00FF00"},"night":{}}""",
+                "night only" to """{"day":{},"night":{"primary":"#00FF00"}}""",
+                "unparsable side" to """{"day":{"primary":"not-a-color"},"night":{"primary":"#00FF00"}}""",
+                "unparsable on both sides" to """{"day":{"primary":"nope"},"night":{"primary":"nope"}}""",
+                "role token" to """{"day":{"primary":"~s"},"night":{"primary":"#00FF00"}}""",
+                "pair" to """{"day":{"primary":{"day":"#000000","night":"#FFFFFF"}},"night":{"primary":"#00FF00"}}""",
+                "number" to """{"day":{"primary":255},"night":{"primary":"#00FF00"}}""",
+            )
+
+        for ((name, json) in cases) {
+            ShadowLog.clear()
+
+            val theme = DynamicWidgetTheme.parse(json)
+
+            assertSame(name, fallback.primary, theme!!.toColorProviders(fallback).primary)
+            assertEquals(name, 1, warnings().size)
+            assertTrue(name, warnings().single().contains("primary"))
+        }
+    }
+
+    @Test
+    fun aDroppedRoleLeavesTheOtherRolesThemed() {
+        val theme =
+            DynamicWidgetTheme.parse(
+                """{"day":{"primary":"#00FF00","surface":"#FFFFFF"},"night":{"surface":"#000000"}}""",
+            )!!
+
+        assertEquals(0xFF000000.toInt(), theme.toColorProviders(fallback).surface.under(Scheme.NIGHT))
+        assertEquals(1, warnings().size)
+    }
+
+    /** Every warning (or worse) logged by anyone: a malformed theme must cost exactly one. */
+    private fun warnings(): List<String> =
+        ShadowLog.getLogs().filter { it.type >= android.util.Log.WARN }.map { it.msg }
+
     private fun ColorProvider.under(scheme: Scheme): Int = getColor(NativeComposeSeam.context(scheme)).toArgb()
 
     private val fallback: ColorProviders =

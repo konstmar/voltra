@@ -1,10 +1,13 @@
 package voltra.dynamicwidget
 
+import android.util.Log
 import androidx.compose.ui.graphics.Color
 import androidx.glance.color.ColorProvider
 import androidx.glance.color.ColorProviders
 import androidx.glance.color.colorProviders
+import org.json.JSONException
 import org.json.JSONObject
+import org.json.JSONTokener
 import voltra.styling.JSColorParser
 import voltra.styling.VoltraColorValue
 import voltra.styling.VoltraThemeColorRole
@@ -60,24 +63,69 @@ internal class DynamicWidgetTheme(
     }
 
     companion object {
-        /** Parses the JSON [VoltraJSRenderer.themeJSON] returns; null JSON means no theme. */
+        private const val TAG = "DynamicWidgetTheme"
+
+        /**
+         * Parses the JSON [VoltraJSRenderer.themeJSON] returns; null JSON means no theme.
+         *
+         * A theme bug never blanks the widget, and each problem costs exactly one warning:
+         * - a top level that isn't an object (which includes the strings Metro sends for a function,
+         *   Symbol or unserialisable theme), or a `day`/`night` that isn't an object → no theme;
+         * - a role defined on one side only, or whose value on a side is not a literal colour (role
+         *   tokens and `{ day, night }` pairs included) → that role is left out.
+         */
         fun parse(json: String?): DynamicWidgetTheme? {
             if (json == null) return null
-            val root = JSONObject(json)
-            val day = root.getJSONObject("day")
-            val night = root.getJSONObject("night")
+            val root =
+                try {
+                    JSONTokener(json).nextValue()
+                } catch (e: JSONException) {
+                    null
+                }
+            if (root !is JSONObject) {
+                Log.w(TAG, "Ignoring the widget theme: expected an object with day and night, got $json")
+                return null
+            }
+            val day = root.opt("day")
+            val night = root.opt("night")
+            if (day !is JSONObject || night !is JSONObject) {
+                Log.w(TAG, "Ignoring the widget theme: day and night must both be objects, got $json")
+                return null
+            }
             val pairs =
                 VoltraThemeColorRole.entries
                     .mapNotNull { role ->
                         val key = role.themeKey
-                        val dayColor = staticColor(day.opt(key)) ?: return@mapNotNull null
-                        val nightColor = staticColor(night.opt(key)) ?: return@mapNotNull null
-                        role to (dayColor to nightColor)
+                        rolePair(key, day.opt(key), night.opt(key))?.let { role to it }
                     }.toMap()
             return DynamicWidgetTheme(pairs, dynamicColors = root.optBoolean("dynamicColors", true))
         }
 
-        private fun staticColor(value: Any?): Color? =
+        /** The role's day and night colours, or null (with one warning when it was half-written). */
+        private fun rolePair(
+            key: String,
+            dayValue: Any?,
+            nightValue: Any?,
+        ): Pair<Color, Color>? {
+            if (dayValue == null && nightValue == null) return null
+            val problem =
+                when {
+                    dayValue == null -> "it is only defined for night"
+                    nightValue == null -> "it is only defined for day"
+                    else -> {
+                        val dayColor = literalColor(dayValue)
+                        val nightColor = literalColor(nightValue)
+                        if (dayColor != null && nightColor != null) return dayColor to nightColor
+                        val side = if (dayColor == null) "day" else "night"
+                        "its $side value ${if (dayColor == null) dayValue else nightValue} is not a literal color"
+                    }
+                }
+            Log.w(TAG, "Ignoring theme role $key: $problem")
+            return null
+        }
+
+        /** A literal colour string; role tokens, pairs and other values are not. */
+        private fun literalColor(value: Any): Color? =
             (value as? String)?.let { (JSColorParser.parse(it) as? VoltraColorValue.Static)?.color }
 
         /** The role's key in `AndroidDynamicColors`: `ON_PRIMARY_CONTAINER` → `onPrimaryContainer`. */
