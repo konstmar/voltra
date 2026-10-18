@@ -15,15 +15,15 @@ import android.util.Log
  * dev-mode hot reload (always-refetch).
  *
  * Thread safety: a single lock guards both evaluate and render, matching iOS's NSLock.
+ *
+ * Theme: right after each successful evaluation, under the same lock, the widget's optional
+ * `theme` export is read once as an opaque JSON string and kept until the next evaluation, so
+ * [themeJSON] always describes the bundle [render] runs.
  */
 object VoltraJSRenderer {
-    private const val TAG = "VoltraJSRenderer"
-
     init {
         System.loadLibrary("voltra_js_renderer")
     }
-
-    private val lock = Any()
 
     private external fun nativeEvaluateBundle(
         wrappedSource: String,
@@ -37,6 +37,78 @@ object VoltraJSRenderer {
         envJSON: String,
     ): String?
 
+    private external fun nativeThemeJSON(widgetId: String): String?
+
+    private val core =
+        VoltraJSRendererCore(
+            object : VoltraJSEngine {
+                override fun evaluateBundle(
+                    wrappedSource: String,
+                    sourceURL: String,
+                    widgetId: String,
+                ): Boolean = nativeEvaluateBundle(wrappedSource, sourceURL, widgetId)
+
+                override fun render(
+                    widgetId: String,
+                    propsJSON: String,
+                    envJSON: String,
+                ): String? = nativeRender(widgetId, propsJSON, envJSON)
+
+                override fun themeJSON(widgetId: String): String? = nativeThemeJSON(widgetId)
+            },
+        )
+
+    /**
+     * Evaluate a widget bundle (raw Metro `/voltra/widgets/<id>.bundle` output), capture its
+     * `render(props, env)` export and read its theme. Idempotent: re-evaluating overwrites both.
+     */
+    fun evaluateBundle(
+        source: String,
+        widgetId: String,
+    ): Boolean = core.evaluateBundle(source, widgetId)
+
+    /**
+     * Invoke the previously-evaluated widget's `render(propsJSON, envJSON)` and return its
+     * resolved JSON string. Returns null if the widget was not evaluated, the function throws,
+     * or it did not return a string.
+     */
+    fun render(
+        widgetId: String,
+        propsJSON: String,
+        envJSON: String,
+    ): String? = core.render(widgetId, propsJSON, envJSON)
+
+    /**
+     * The widget's `theme` export as JSON, as read by its last successful evaluation, or null when
+     * it has none. A map lookup: it never calls into JavaScript and never inspects the JSON.
+     */
+    fun themeJSON(widgetId: String): String? = core.themeJSON(widgetId)
+}
+
+/** The native Hermes calls behind [VoltraJSRenderer]. */
+internal interface VoltraJSEngine {
+    fun evaluateBundle(
+        wrappedSource: String,
+        sourceURL: String,
+        widgetId: String,
+    ): Boolean
+
+    fun render(
+        widgetId: String,
+        propsJSON: String,
+        envJSON: String,
+    ): String?
+
+    fun themeJSON(widgetId: String): String?
+}
+
+/** Everything [VoltraJSRenderer] does above the native library: wrapping, locking and the theme map. */
+internal class VoltraJSRendererCore(
+    private val engine: VoltraJSEngine,
+) {
+    private val lock = Any()
+    private val themes = HashMap<String, String>()
+
     /**
      * Minimal global shims. The widget Metro bundle runs in a *bare* Hermes runtime (no RN
      * preamble — the widget Metro config strips polyfills), but React's dev build and a few
@@ -45,7 +117,7 @@ object VoltraJSRenderer {
      * before the bundle. Voltra's renderer is fully synchronous, so timers are never actually
      * needed during a render — the no-ops exist only so references don't throw.
      */
-    private val GLOBAL_SHIMS =
+    private val globalShims =
         """
         (function (g) {
           if (typeof g.console === 'undefined') {
@@ -65,8 +137,7 @@ object VoltraJSRenderer {
         """.trimIndent()
 
     /**
-     * Evaluate a widget bundle (raw Metro `/voltra/widgets/<id>.bundle` output) and capture
-     * its `render(props, env)` export. Idempotent: re-evaluating overwrites the capture.
+     * Evaluate a widget bundle and capture its `render(props, env)` export, then read its theme.
      *
      * The raw bundle ends with Metro's entry invocation `__r(<entryId>);`. We re-invoke that
      * entry and stash its exports in `globalThis.__voltraWidgets[<id>]` (Metro's `__r` caches
@@ -80,7 +151,7 @@ object VoltraJSRenderer {
             val entryModuleId = extractEntryModuleId(source) ?: 0
             val wrapped =
                 buildString {
-                    append(GLOBAL_SHIMS)
+                    append(globalShims)
                     append('\n')
                     append(source)
                     append('\n')
@@ -95,19 +166,15 @@ object VoltraJSRenderer {
                 }
             val ok =
                 try {
-                    nativeEvaluateBundle(wrapped, "voltra/$widgetId.bundle", widgetId)
+                    engine.evaluateBundle(wrapped, "voltra/$widgetId.bundle", widgetId)
                 } catch (t: Throwable) {
                     Log.e(TAG, "nativeEvaluateBundle threw for widgetId=$widgetId", t)
                     false
                 }
+            if (ok) readTheme(widgetId)
             ok
         }
 
-    /**
-     * Invoke the previously-evaluated widget's `render(propsJSON, envJSON)` and return its
-     * resolved JSON string. Returns null if the widget was not evaluated, the function throws,
-     * or it did not return a string.
-     */
     fun render(
         widgetId: String,
         propsJSON: String,
@@ -115,12 +182,27 @@ object VoltraJSRenderer {
     ): String? =
         synchronized(lock) {
             try {
-                nativeRender(widgetId, propsJSON, envJSON)
+                engine.render(widgetId, propsJSON, envJSON)
             } catch (t: Throwable) {
                 Log.e(TAG, "nativeRender threw for widgetId=$widgetId", t)
                 null
             }
         }
+
+    fun themeJSON(widgetId: String): String? = synchronized(lock) { themes[widgetId] }
+
+    /** Replaces the widget's theme with the just-evaluated bundle's. Never throws. */
+    private fun readTheme(widgetId: String) {
+        themes.remove(widgetId)
+        val theme =
+            try {
+                engine.themeJSON(widgetId)
+            } catch (t: Throwable) {
+                Log.e(TAG, "nativeThemeJSON threw for widgetId=$widgetId", t)
+                null
+            }
+        if (theme != null) themes[widgetId] = theme
+    }
 
     /**
      * Find the entry module id Metro emitted in the bundle's trailing `__r(<id>);`. Every
@@ -144,4 +226,8 @@ object VoltraJSRenderer {
                 .replace("\n", "\\n")
                 .replace("\r", "\\r") +
             "\""
+
+    private companion object {
+        private const val TAG = "VoltraJSRenderer"
+    }
 }
