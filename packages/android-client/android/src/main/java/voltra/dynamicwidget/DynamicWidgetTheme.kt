@@ -110,8 +110,14 @@ internal class DynamicWidgetTheme(
             if (dayValue == null && nightValue == null) return null
             val problem =
                 when {
-                    dayValue == null -> "it is only defined for night"
-                    nightValue == null -> "it is only defined for day"
+                    dayValue == null -> {
+                        "it is only defined for night"
+                    }
+
+                    nightValue == null -> {
+                        "it is only defined for day"
+                    }
+
                     else -> {
                         val dayColor = literalColor(dayValue)
                         val nightColor = literalColor(nightValue)
