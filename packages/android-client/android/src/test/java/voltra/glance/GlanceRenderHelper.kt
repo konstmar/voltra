@@ -9,7 +9,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageView
-import android.widget.ProgressBar
 import android.widget.RemoteViews
 import android.widget.TextView
 import androidx.compose.runtime.Composable
@@ -24,10 +23,10 @@ import voltra.models.VoltraNode
 import voltra.parsing.VoltraDecompressor
 
 /**
- * The native compose/apply seam: composes Glance content into `RemoteViews` the way a widget update
- * does, applies them into a real `View` tree under a chosen color scheme, and reads what a user
- * would see on the Views. No JavaScript runs: the node is built by hand or decoded from compressed
- * JSON, exactly as the on-device renderer emits it.
+ * Composes Glance content into `RemoteViews` the way a widget update does, applies them into a real
+ * `View` tree under a chosen color scheme, and reads what a user would see on the Views. No JavaScript
+ * runs: the node is built by hand or decoded from compressed JSON, exactly as the on-device renderer
+ * emits it.
  *
  * Run under Robolectric. Use `@Config(sdk = [31])` for the path where the launcher receives both
  * colors of a pair and `[26]` for the path where composition bakes one side in; add
@@ -35,14 +34,14 @@ import voltra.parsing.VoltraDecompressor
  * cache between schemes.
  *
  * ```
- * val views = NativeComposeSeam.compose(NativeComposeSeam.node(json), Scheme.DAY)
+ * val views = GlanceRenderHelper.compose(GlanceRenderHelper.node(json), Scheme.DAY)
  * val day = views.applyUnder(Scheme.DAY)
  * val night = views.applyUnder(Scheme.NIGHT)  // same composition, other scheme
  * day.backgroundColors()  /  day.textColors()["Hi"]
  * ```
  */
 @OptIn(ExperimentalGlanceRemoteViewsApi::class)
-object NativeComposeSeam {
+object GlanceRenderHelper {
     enum class Scheme { DAY, NIGHT }
 
     val DEFAULT_SIZE = DpSize(200.dp, 200.dp)
@@ -53,7 +52,6 @@ object NativeComposeSeam {
             explicitNulls = false
         }
 
-    /** The application context with its configuration's night bits set for [scheme]. */
     fun context(scheme: Scheme): Context {
         val app = RuntimeEnvironment.getApplication()
         val night =
@@ -68,18 +66,21 @@ object NativeComposeSeam {
         return app.createConfigurationContext(configuration)
     }
 
-    /** Decodes a node the way a Dynamic Widget does: compressed JSON in, expanded keys out. */
     fun node(compressedJson: String): VoltraNode =
         VoltraDecompressor.decompressNode(json.decodeFromString<VoltraNode>(compressedJson))
 
-    /** Composes [node] through [GlanceFactory] under [scheme]. */
     fun compose(
         node: VoltraNode,
         scheme: Scheme,
         size: DpSize = DEFAULT_SIZE,
-    ): RemoteViews = compose(scheme, size) { GlanceFactory("seam", widgetSize = size).Render(node) }
+    ): RemoteViews =
+        runBlocking {
+            GlanceRemoteViews()
+                .compose(context(scheme), size) { GlanceFactory("test", widgetSize = size).Render(node) }
+                .remoteViews
+        }
 
-    /** Composes arbitrary Glance [content] under [scheme], for code that payloads cannot reach. */
+    /** Composes arbitrary Glance [content] under [scheme], for code that wraps the rendered node. */
     fun compose(
         scheme: Scheme,
         size: DpSize = DEFAULT_SIZE,
@@ -89,7 +90,6 @@ object NativeComposeSeam {
             GlanceRemoteViews().compose(context(scheme), size) { content() }.remoteViews
         }
 
-    /** Shortcut: decode, compose under [composeUnder] and apply under [applyUnder]. */
     fun render(
         compressedJson: String,
         composeUnder: Scheme,
@@ -98,13 +98,12 @@ object NativeComposeSeam {
 }
 
 /** Inflates these `RemoteViews` into a `FrameLayout` with [scheme]'s configuration, as a launcher would. */
-fun RemoteViews.applyUnder(scheme: NativeComposeSeam.Scheme): View {
-    val context = NativeComposeSeam.context(scheme)
+fun RemoteViews.applyUnder(scheme: GlanceRenderHelper.Scheme): View {
+    val context = GlanceRenderHelper.context(scheme)
     val parent = FrameLayout(context)
     return apply(context, parent).also { parent.addView(it) }
 }
 
-/** This view and every view below it, depth first. */
 fun View.descendants(): Sequence<View> =
     sequence {
         yield(this@descendants)
@@ -113,16 +112,10 @@ fun View.descendants(): Sequence<View> =
         }
     }
 
-/** Every solid background color in the tree (ARGB), depth first. */
 fun View.backgroundColors(): List<Int> = descendants().mapNotNull { (it.background as? ColorDrawable)?.color }.toList()
 
-/** The current text color (ARGB) of every `TextView`, keyed by its text. */
 fun View.textColors(): Map<String, Int> =
     descendants().filterIsInstance<TextView>().associate { it.text.toString() to it.currentTextColor }
-
-/** The progress tint (ARGB) of every `ProgressBar` that has one, depth first. Glance sets it from API 31. */
-fun View.progressTints(): List<Int> =
-    descendants().filterIsInstance<ProgressBar>().mapNotNull { it.progressTintList?.defaultColor }.toList()
 
 /** Bitmaps shown by `ImageView`s in the tree, depth first. Pixels need `@GraphicsMode(NATIVE)`. */
 fun View.imageBitmaps(): List<Bitmap> =

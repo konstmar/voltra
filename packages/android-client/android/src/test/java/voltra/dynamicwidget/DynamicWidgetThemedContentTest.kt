@@ -8,13 +8,13 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import voltra.glance.GlanceFactory
-import voltra.glance.NativeComposeSeam
-import voltra.glance.NativeComposeSeam.Scheme
+import voltra.glance.GlanceRenderHelper
+import voltra.glance.GlanceRenderHelper.Scheme
 import voltra.glance.applyUnder
 import voltra.glance.backgroundColors
 import voltra.glance.textColors
 
-/** The theme a Dynamic Widget exports, applied around its rendered node, through the compose/apply seam. */
+/** A Dynamic Widget's exported theme applied around its rendered node, as each scheme shows it. */
 @RunWith(RobolectricTestRunner::class)
 class DynamicWidgetThemedContentTest {
     private val primaryText = """{"t":18,"c":"Hi","p":{"s":{"c":"~p"}}}"""
@@ -108,8 +108,8 @@ class DynamicWidgetThemedContentTest {
     fun withoutAThemeTheWidgetRendersAsItDoesToday() {
         for (scheme in Scheme.entries) {
             val today =
-                NativeComposeSeam
-                    .compose(NativeComposeSeam.node(primaryText), scheme)
+                GlanceRenderHelper
+                    .compose(GlanceRenderHelper.node(primaryText), scheme)
                     .applyUnder(scheme)
                     .textColors()
 
@@ -130,8 +130,8 @@ class DynamicWidgetThemedContentTest {
         themeJSON: String?,
         scheme: Scheme,
     ) = run {
-        val node = NativeComposeSeam.node(json)
-        val factory = GlanceFactory("seam", widgetSize = NativeComposeSeam.DEFAULT_SIZE)
-        NativeComposeSeam.compose(scheme) { DynamicWidgetThemedContent(themeJSON, node, factory) }.applyUnder(scheme)
+        val node = GlanceRenderHelper.node(json)
+        val factory = GlanceFactory("test", widgetSize = GlanceRenderHelper.DEFAULT_SIZE)
+        GlanceRenderHelper.compose(scheme) { DynamicWidgetThemedContent(themeJSON, node, factory) }.applyUnder(scheme)
     }
 }

@@ -15,8 +15,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.shadows.ShadowLog
-import voltra.glance.NativeComposeSeam
-import voltra.glance.NativeComposeSeam.Scheme
+import voltra.glance.GlanceRenderHelper
+import voltra.glance.GlanceRenderHelper.Scheme
 
 @RunWith(RobolectricTestRunner::class)
 class DynamicWidgetThemeTest {
@@ -169,7 +169,7 @@ class DynamicWidgetThemeTest {
     private fun warnings(): List<String> =
         ShadowLog.getLogs().filter { it.type >= android.util.Log.WARN }.map { it.msg }
 
-    private fun ColorProvider.under(scheme: Scheme): Int = getColor(NativeComposeSeam.context(scheme)).toArgb()
+    private fun ColorProvider.under(scheme: Scheme): Int = getColor(GlanceRenderHelper.context(scheme)).toArgb()
 
     private val fallback: ColorProviders =
         colorProviders(
