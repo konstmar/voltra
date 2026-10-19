@@ -55,7 +55,6 @@ sealed interface VoltraColorValue {
         val role: VoltraThemeColorRole,
     ) : VoltraColorValue
 
-    /** A `{ day, night }` pair of literal colors. */
     data class DayNight(
         val day: Color,
         val night: Color,
@@ -97,38 +96,22 @@ fun VoltraThemeColorRole.toColorProvider(colors: ColorProviders): ColorProvider 
         VoltraThemeColorRole.WIDGET_BACKGROUND -> colors.widgetBackground
     }
 
-@Composable
-fun VoltraColorValue.toColorProvider(): ColorProvider {
-    val themeColors = GlanceTheme.colors
-    return toColorProvider { role -> role.toColorProvider(themeColors) }
-}
-
 /**
- * Maps to a provider outside composition, resolving a theme role with [resolveRole]. A pair maps to
- * Glance's public day/night provider: from Android 12 the launcher receives both colors and swaps
- * them itself; below that Glance picks a side when the widget is composed.
+ * A pair maps to Glance's public day/night provider: from Android 12 the launcher receives both
+ * colors and swaps them itself; below that Glance picks a side when the widget is composed.
  */
-fun VoltraColorValue.toColorProvider(resolveRole: (VoltraThemeColorRole) -> ColorProvider): ColorProvider =
+@Composable
+fun VoltraColorValue.toColorProvider(): ColorProvider =
     when (this) {
-        is VoltraColorValue.Dynamic -> resolveRole(role)
+        is VoltraColorValue.Dynamic -> role.toColorProvider()
         is VoltraColorValue.Static -> ColorProvider(color)
         is VoltraColorValue.DayNight -> androidx.glance.color.ColorProvider(day = day, night = night)
     }
 
 @Composable
 fun VoltraColorValue.resolveColor(context: Context = LocalContext.current): Color =
-    resolveColor(context, GlanceTheme.colors)
-
-/**
- * Resolves to one concrete color outside composition: a pair picks the side for the night bit of
- * [context]'s configuration, and a theme role reads [themeColors].
- */
-fun VoltraColorValue.resolveColor(
-    context: Context,
-    themeColors: ColorProviders,
-): Color =
     when (this) {
-        is VoltraColorValue.Dynamic -> role.toColorProvider(themeColors).getColor(context)
+        is VoltraColorValue.Dynamic -> role.toColorProvider().getColor(context)
         is VoltraColorValue.Static -> color
         is VoltraColorValue.DayNight -> if (context.isNightMode()) night else day
     }

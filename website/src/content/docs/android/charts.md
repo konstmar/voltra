@@ -277,7 +277,7 @@ A mark's `color` and each `foregroundStyleScale` value is a color value: a color
 </VoltraAndroid.Chart>
 ```
 
-A chart is drawn as an image, so Android picks the side when the widget is drawn, on every Android version. Voltra redraws widgets on a theme change while your app's process is alive; otherwise the chart keeps the previous side until the widget's next update. An invalid pair is ignored with one warning in Logcat, and the mark or series falls back to its automatic color.
+A chart is drawn as an image, so the side is picked when the widget is drawn, on every Android version. An invalid pair is ignored, and the mark or series falls back to its automatic color.
 
 ## Combining Marks
 

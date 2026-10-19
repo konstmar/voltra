@@ -171,7 +171,6 @@ object StyleConverter {
         val overflow = JSStyleParser.overflow(js["overflow"])
         val clipToOutline = overflow == Overflow.HIDDEN
 
-        // A whole-value pair picks its CSS string by the night bit; only that side is parsed.
         val backgroundImageCss =
             when (val value = js["backgroundImage"]) {
                 is Map<*, *> -> JSGradientParser.selectPairSide(value, "backgroundImage", isNightMode)

@@ -8,7 +8,7 @@ const toKotlinType = (param: ComponentParameter): string => {
   if (param.type === 'component') {
     return 'Any' // Component props are handled separately
   } else if (param.type === 'color') {
-    return 'Any' // A color string or a { day, night } map; serialised contextually
+    return 'Any' // A color string or a { day, night } map; serialized contextually
   } else if (param.enum && param.enum.length > 0) {
     return 'String'
   } else if (param.jsonEncoded) {

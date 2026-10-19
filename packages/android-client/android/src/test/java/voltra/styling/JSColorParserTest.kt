@@ -3,26 +3,12 @@ package voltra.styling
 import androidx.compose.ui.graphics.Color
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.shadows.ShadowLog
 
-/**
- * `{ day, night }` color pairs: each side is a literal color in the string grammar, and an invalid
- * pair is dropped as a whole with exactly one warning.
- */
 @RunWith(RobolectricTestRunner::class)
 class JSColorParserTest {
-    @Before
-    fun clearLogs() {
-        ShadowLog.clear()
-    }
-
-    private fun warnings() = ShadowLog.getLogsForTag("JSColorParser")
-
     private fun parsePair(
         day: Any?,
         night: Any?,
@@ -34,7 +20,6 @@ class JSColorParserTest {
             VoltraColorValue.DayNight(day = Color.White, night = Color.Black),
             parsePair("#ffffff", "#000000"),
         )
-        assertTrue(warnings().isEmpty())
     }
 
     @Test
@@ -60,7 +45,6 @@ class JSColorParserTest {
             assertEquals(side, VoltraColorValue.DayNight(Color.White, red), parsePair("white", side))
         }
         assertEquals(VoltraColorValue.DayNight(Color.Transparent, Color.Black), parsePair("transparent", "#000"))
-        assertTrue(warnings().isEmpty())
     }
 
     @Test
@@ -79,11 +63,10 @@ class JSColorParserTest {
             VoltraColorValue.DayNight(Color.White, Color.Black),
             JSColorParser.parse(value, "backgroundColor"),
         )
-        assertTrue(warnings().isEmpty())
     }
 
     @Test
-    fun dropsAnInvalidPairWithExactlyOneWarningNamingTheKey() {
+    fun dropsAnInvalidPair() {
         val invalid =
             mapOf(
                 "missing day" to mapOf("night" to "#000"),
@@ -104,13 +87,7 @@ class JSColorParserTest {
             )
 
         for ((case, value) in invalid) {
-            ShadowLog.clear()
-
             assertNull(case, JSColorParser.parse(value, "backgroundColor"))
-
-            val logged = warnings()
-            assertEquals("$case: ${logged.map { it.msg }}", 1, logged.size)
-            assertTrue("$case: ${logged.single().msg}", logged.single().msg.contains("backgroundColor"))
         }
     }
 

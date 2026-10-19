@@ -42,7 +42,7 @@ The following React Native style properties are supported on Android:
 
 ### Day and night colors
 
-`backgroundColor` and text `color` also take a pair of colors, one for the light system theme and one for the dark one. The type is `AndroidColorPair`, exported from `@use-voltra/android`:
+`backgroundColor` and text `color` also take a `{ day, night }` pair: one color for the light system theme and one for the dark. The type is `AndroidColorPair`, exported from `@use-voltra/android`:
 
 ```tsx
 import type { AndroidColorPair } from '@use-voltra/android'
@@ -54,16 +54,13 @@ const cardBackground: AndroidColorPair = { day: '#ffffff', night: 'rgba(32, 33, 
 </Column>
 ```
 
-Your widget's JavaScript produces the same output in both themes; Android picks the side. On Android 12+ the launcher receives both colors and swaps them itself when the theme changes, even when your app isn't running. On older versions the color is picked when the widget is drawn: Voltra redraws widgets on a theme change while your app's process is alive, and otherwise the widget keeps the previous side until its next update.
+On Android 12+ the launcher switches between the two colors itself when the theme changes. On older versions the color is picked when the widget is drawn.
 
-- Each side takes any literal color the string form accepts: hex with or without alpha (`#fff`, `#ffffff80`), `rgb()`/`rgba()`, `hsl()`/`hsla()`, color names and `transparent`. Alpha is kept per side.
-- Both `day` and `night` are required. Other keys are ignored.
-- `AndroidDynamicColors.*` tokens are not allowed inside a pair. TypeScript does not catch a token inside a pair in a style or a component color prop; the pair is rejected when the widget renders.
-- An invalid pair (a missing or empty side, a token, or a value that isn't a color) is dropped as a whole with one warning in Logcat, and the property falls back to its default, as an unparsable color string does.
-- `borderColor` and `shadowColor` accept pairs too, but borders and shadows are not drawn yet.
-- Component color props take pairs as well: `Text` `color`, `Image` `tintColor`/`colorFilter`, the button, `Switch`, `CheckBox` and `RadioButton` colors, the progress indicator colors, and the `TitleBar` and `Scaffold` colors. A `Text` `color` prop wins over the style's `color`.
-- Gradients follow the theme too, either through tokens in their stops or as a pair of whole gradients. See [Gradients in light and dark](#gradients-in-light-and-dark).
-- Charts accept pairs for mark colors and `foregroundStyleScale` values. See [Charts](/android/charts#colors-in-light-and-dark).
+- Each side takes any literal color the string form accepts, including alpha (`#ffffff80`, `rgba()`, `hsla()`), color names and `transparent`. Alpha is kept per side.
+- `AndroidDynamicColors.*` tokens are not allowed inside a pair.
+- A pair with a missing, empty or invalid side is dropped as a whole, and the property falls back to its default. Other keys are ignored.
+- Component color props, `borderColor` and `shadowColor` take pairs too. Borders and shadows are not drawn yet.
+- Gradients and charts can follow the theme too. See [Gradients in light and dark](#gradients-in-light-and-dark) and [Charts](/android/charts#colors-in-light-and-dark).
 
 ### Image Specific
 
@@ -117,8 +114,8 @@ Use `backgroundImage`, not `background-image`. Gradient bitmaps are generated na
 
 A gradient can follow the system theme in two ways:
 
-- **Tokens in the stops.** Stops accept `AndroidDynamicColors.*` tokens, so the gradient uses the theme's colors in each scheme. Stops do not take `{ day, night }` pairs, because a gradient is a single CSS string.
-- **A pair of whole gradients.** `backgroundImage` takes `{ day: '<css gradient>', night: '<css gradient>' }`, and Android draws the side for the current theme. The two sides can differ in anything: direction, kind, stops or stop count.
+- **Tokens in the stops.** Stops accept `AndroidDynamicColors.*` tokens. They don't take `{ day, night }` pairs.
+- **A pair of whole gradients.** `backgroundImage` takes `{ day: '<css gradient>', night: '<css gradient>' }`, and Android draws the side for the current theme.
 
 ```tsx
 import { AndroidDynamicColors, VoltraAndroid } from '@use-voltra/android'
@@ -141,11 +138,7 @@ import { AndroidDynamicColors, VoltraAndroid } from '@use-voltra/android'
 />
 ```
 
-Both sides are required, and each must be a non-empty string. If either side is missing, empty or not a string, the whole pair is dropped with one warning in Logcat, and `backgroundColor` shows instead.
-
-Android parses only the side for the current theme. A typo in one side's gradient therefore shows only while that theme is active: that side is dropped like any gradient that can't be drawn, with `backgroundColor` showing instead, and the other side still draws.
-
-A gradient is drawn into a bitmap when the widget renders, in the colors of the theme at that moment, on every Android version. When the theme changes, Voltra redraws widgets while your app's process is alive; otherwise the gradient keeps the previous theme's colors until the widget's next update.
+If either side is missing or empty, the pair is dropped and `backgroundColor` shows instead. A gradient is drawn into a bitmap in the current theme's colors on every Android version, so it changes on the widget's next redraw.
 
 ## Limitations
 

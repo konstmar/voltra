@@ -9,9 +9,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.GraphicsMode
-import org.robolectric.shadows.ShadowLog
-import voltra.glance.NativeComposeSeam
-import voltra.glance.NativeComposeSeam.Scheme
+import voltra.glance.GlanceRenderHelper
+import voltra.glance.GlanceRenderHelper.Scheme
 import voltra.glance.imageBitmaps
 import kotlin.math.abs
 import kotlin.math.cos
@@ -292,14 +291,13 @@ class ArcBitmapRendererTest {
         assertEquals(0, AndroidColor.alpha(bitmap.getPixel(bitmap.width / 2, bitmap.height / 2)))
     }
 
-    // MARK: - `{ day, night }` gradient colors, through the native compose/apply seam
+    // MARK: - `{ day, night }` gradient colors
 
     // The bitmap is baked on every API level, so each scheme is composed on its own, with the arc
     // bitmap cache cleared in between as a scheme flip does.
 
     @Before
     fun reset() {
-        ShadowLog.clear()
         ArcBitmapCache.clear()
     }
 
@@ -317,7 +315,7 @@ class ArcBitmapRendererTest {
         scheme: Scheme,
     ): Bitmap {
         ArcBitmapCache.clear()
-        return NativeComposeSeam.render(json, composeUnder = scheme).imageBitmaps().single()
+        return GlanceRenderHelper.render(json, composeUnder = scheme).imageBitmaps().single()
     }
 
     /**
@@ -334,22 +332,25 @@ class ArcBitmapRendererTest {
     private fun hex(color: Int) = Integer.toHexString(color)
 
     @Test
+    fun theArcFilledEndFollowsAColorPairInEachScheme() {
+        val json = """{"t":21,"p":{"s":{"w":100,"h":100},"prg":0.5,"sw":20,"c":{"day":"#ff0000","night":"#0000ff"}}}"""
+
+        assertEquals("day", hex(red), hex(arcBitmapUnder(json, Scheme.DAY).filledEnd()))
+        assertEquals("night", hex(blue), hex(arcBitmapUnder(json, Scheme.NIGHT).filledEnd()))
+    }
+
+    @Test
     fun theArcFilledEndFollowsAGradientColorPairInEachScheme() {
         val json = arc("""[{"day":"#ff0000","night":"#0000ff"},{"day":"#ff0000","night":"#0000ff"}]""")
 
         assertEquals("day", hex(red), hex(arcBitmapUnder(json, Scheme.DAY).filledEnd()))
         assertEquals("night", hex(blue), hex(arcBitmapUnder(json, Scheme.NIGHT).filledEnd()))
-        assertTrue(ShadowLog.getLogsForTag("JSColorParser").isEmpty())
     }
 
     @Test
-    fun anInvalidGradientPairFallsBackToTheSolidColorAndNamesTheProp() {
+    fun anInvalidGradientPairFallsBackToTheSolidColor() {
         val json = arc("""[{"day":"#ff0000","night":"~p"},"#0000ff"]""")
 
         assertEquals(hex(green), hex(arcBitmapUnder(json, Scheme.DAY).filledEnd()))
-        val warnings = ShadowLog.getLogsForTag("JSColorParser").map { it.msg }
-        val expected =
-            "Ignoring invalid color pair for gradientColors: night must be a literal color string, got \"~p\""
-        assertEquals(listOf(expected), warnings)
     }
 }

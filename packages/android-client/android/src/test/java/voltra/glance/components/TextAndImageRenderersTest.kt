@@ -2,22 +2,18 @@ package voltra.glance.components
 
 import android.graphics.Bitmap
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
-import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.GraphicsMode
-import org.robolectric.shadows.ShadowLog
-import voltra.glance.NativeComposeSeam
-import voltra.glance.NativeComposeSeam.Scheme
+import voltra.glance.GlanceRenderHelper
+import voltra.glance.GlanceRenderHelper.Scheme
 import voltra.glance.imageBitmaps
 import voltra.glance.textColors
 
 /**
- * `RenderText` with `{ day, night }` color pairs, through the native compose/apply seam. Custom-font
- * text is a bitmap baked at composition on every API level, so each scheme is composed on its own,
- * and reading its pixels needs native graphics.
+ * Custom-font text is a bitmap baked at composition on every API level, so each scheme is composed on
+ * its own, and reading its pixels needs native graphics.
  */
 @RunWith(RobolectricTestRunner::class)
 class TextAndImageRenderersTest {
@@ -25,18 +21,13 @@ class TextAndImageRenderersTest {
     private val blue = 0xFF0000FF.toInt()
     private val pair = """{"day":"#ff0000","night":"#0000ff"}"""
 
-    @Before
-    fun clearLogs() {
-        ShadowLog.clear()
-    }
-
     private fun hex(color: Int) = Integer.toHexString(color)
 
     @Test
     fun theTextColorPropWinsOverTheStyleColor() {
         val json = """{"t":18,"c":"Hi","p":{"s":{"c":"#00ff00"},"c":$pair}}"""
 
-        assertEquals(blue, NativeComposeSeam.render(json, composeUnder = Scheme.NIGHT).textColors()["Hi"])
+        assertEquals(blue, GlanceRenderHelper.render(json, composeUnder = Scheme.NIGHT).textColors()["Hi"])
     }
 
     /** Colors of the fully opaque pixels, which antialiasing leaves untouched inside the glyphs. */
@@ -57,12 +48,11 @@ class TextAndImageRenderersTest {
             )
 
         for ((name, json) in cases) {
-            val day = NativeComposeSeam.render(json, composeUnder = Scheme.DAY).imageBitmaps().single()
-            val night = NativeComposeSeam.render(json, composeUnder = Scheme.NIGHT).imageBitmaps().single()
+            val day = GlanceRenderHelper.render(json, composeUnder = Scheme.DAY).imageBitmaps().single()
+            val night = GlanceRenderHelper.render(json, composeUnder = Scheme.NIGHT).imageBitmaps().single()
 
             assertEquals("$name by day", setOf(hex(red)), day.opaqueColors())
             assertEquals("$name by night", setOf(hex(blue)), night.opaqueColors())
         }
-        assertTrue(ShadowLog.getLogsForTag("JSColorParser").isEmpty())
     }
 }

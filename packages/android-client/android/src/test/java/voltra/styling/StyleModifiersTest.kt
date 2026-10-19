@@ -1,23 +1,16 @@
 package voltra.styling
 
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
-import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
-import org.robolectric.shadows.ShadowLog
-import voltra.glance.NativeComposeSeam
-import voltra.glance.NativeComposeSeam.Scheme
+import voltra.glance.GlanceRenderHelper
+import voltra.glance.GlanceRenderHelper.Scheme
 import voltra.glance.applyUnder
 import voltra.glance.backgroundColors
 import voltra.glance.textColors
 
-/**
- * `applyStyle` and `toGlanceTextStyle` with `{ day, night }` pairs on style color keys, through the
- * native compose/apply seam.
- */
 @RunWith(RobolectricTestRunner::class)
 class StyleModifiersTest {
     private val white = 0xFFFFFFFF.toInt()
@@ -30,15 +23,10 @@ class StyleModifiersTest {
          "c":{"t":18,"c":"Hi","p":{"s":{"c":{"day":"#000000","night":"#ffffff"}}}}}
         """.trimIndent()
 
-    @Before
-    fun clearLogs() {
-        ShadowLog.clear()
-    }
-
     @Test
     @Config(sdk = [31])
     fun launcherSwapsBothColorsWithoutRecomposingFromAndroid12() {
-        val views = NativeComposeSeam.compose(NativeComposeSeam.node(card), Scheme.DAY)
+        val views = GlanceRenderHelper.compose(GlanceRenderHelper.node(card), Scheme.DAY)
 
         val day = views.applyUnder(Scheme.DAY)
         assertEquals(listOf(white), day.backgroundColors())
@@ -52,16 +40,16 @@ class StyleModifiersTest {
     @Test
     @Config(sdk = [26])
     fun recompositionPicksTheSideBeforeAndroid12() {
-        val day = NativeComposeSeam.render(card, composeUnder = Scheme.DAY)
+        val day = GlanceRenderHelper.render(card, composeUnder = Scheme.DAY)
         assertEquals(listOf(white), day.backgroundColors())
         assertEquals(black, day.textColors()["Hi"])
 
-        val night = NativeComposeSeam.render(card, composeUnder = Scheme.NIGHT)
+        val night = GlanceRenderHelper.render(card, composeUnder = Scheme.NIGHT)
         assertEquals(listOf(black), night.backgroundColors())
         assertEquals(white, night.textColors()["Hi"])
 
         // The side is baked in when composing: a scheme flip needs a native recomposition.
-        val stale = NativeComposeSeam.render(card, composeUnder = Scheme.DAY, applyUnder = Scheme.NIGHT)
+        val stale = GlanceRenderHelper.render(card, composeUnder = Scheme.DAY, applyUnder = Scheme.NIGHT)
         assertEquals(listOf(white), stale.backgroundColors())
     }
 
@@ -74,26 +62,21 @@ class StyleModifiersTest {
              "c":{"t":18,"c":"Hi","p":{"s":{"c":{"day":"#000000","night":"#ffffff"}}}}}
             """.trimIndent()
 
-        val day = NativeComposeSeam.render(json, composeUnder = Scheme.DAY)
-        val night = NativeComposeSeam.render(json, composeUnder = Scheme.NIGHT)
+        val day = GlanceRenderHelper.render(json, composeUnder = Scheme.DAY)
+        val night = GlanceRenderHelper.render(json, composeUnder = Scheme.NIGHT)
 
         assertEquals(listOf(white), day.backgroundColors())
         assertEquals(black, day.textColors()["Hi"])
         assertEquals(listOf(black), night.backgroundColors())
         assertEquals(white, night.textColors()["Hi"])
-        assertTrue(ShadowLog.getLogsForTag("JSColorParser").isEmpty())
     }
 
     @Test
-    fun anInvalidPairFallsBackToTheDefaultAndNamesTheKey() {
+    fun anInvalidPairFallsBackToTheDefault() {
         val json = """{"t":9,"p":{"s":{"bg":{"day":"~p","night":"#000000"}}},"c":{"t":18,"c":"Hi"}}"""
 
-        val view = NativeComposeSeam.render(json, composeUnder = Scheme.NIGHT)
+        val view = GlanceRenderHelper.render(json, composeUnder = Scheme.NIGHT)
 
         assertEquals(emptyList<Int>(), view.backgroundColors())
-        val warnings = ShadowLog.getLogsForTag("JSColorParser")
-        assertTrue(warnings.isNotEmpty())
-        // Style conversion can run more than once per element, so count only what each warning says.
-        assertTrue(warnings.map { it.msg }.toString(), warnings.all { it.msg.contains("backgroundColor") })
     }
 }

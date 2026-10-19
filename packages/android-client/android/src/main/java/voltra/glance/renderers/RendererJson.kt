@@ -77,11 +77,6 @@ internal fun parseEncodedImageSource(sourceProp: Any?): EncodedImageSource? {
     }
 }
 
-/**
- * Parses a chart's JSON-encoded `foregroundStyleScale` entries, `[[series, color], ...]`. The series
- * is a string; the color is a string or a `{ day, night }` pair, returned as a `String` or a `Map`
- * ready for `JSColorParser.parse`. Any other element fails the whole scale.
- */
 internal fun parseForegroundStyleScaleEntries(json: String?): List<List<Any>>? {
     if (json.isNullOrEmpty()) return null
     return try {
@@ -100,10 +95,9 @@ internal fun parseForegroundStyleScaleEntries(json: String?): List<List<Any>>? {
 }
 
 /**
- * Parses a JSON-encoded array of colors, such as the arc indicator's `gradientColors`. Each element
- * is a color string or a `{ day, night }` pair, returned as a `String` or a `Map` ready for
- * `JSColorParser.parse`. Any other element fails the whole list. Despite the name, which predates
- * color pairs, the elements are not all strings.
+ * Parses a JSON-encoded array of colors, such as the arc indicator's `gradientColors`. Each color is
+ * a string or a `{ day, night }` pair, returned as a `String` or a `Map`. Any other element fails
+ * the whole list.
  */
 internal fun parseColorStringList(json: String?): List<Any>? {
     if (json.isNullOrEmpty()) return null
@@ -118,11 +112,6 @@ internal fun parseColorStringList(json: String?): List<Any>? {
     }
 }
 
-/**
- * Decodes one element of a JSON-encoded color list: a string stays a `String` and a `{ day, night }`
- * object becomes a `Map`, both ready for `JSColorParser.parse`. Anything else throws, so the caller
- * fails the whole list.
- */
 private fun decodeStringOrPair(element: JsonElement): Any =
     when {
         element is JsonObject -> element.toDynamicObject()

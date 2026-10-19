@@ -1,5 +1,6 @@
 package voltra.styling
 
+import android.util.Log
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -43,26 +44,27 @@ object JSGradientParser {
         }
     }
 
-    /**
-     * The CSS string of a `{ day, night }` gradient pair for the current scheme: [isNightMode]
-     * picks `night`, otherwise `day`. Both sides must be non-empty strings; anything else drops the
-     * whole pair with one warning naming [key]. The chosen side is not parsed here, so a typo in the
-     * other side never affects it.
-     */
+    /** The chosen side is not parsed here, so a typo in the other side never affects it. */
     fun selectPairSide(
         pair: Map<*, *>,
         key: String,
         isNightMode: Boolean,
-    ): String? =
-        parseDayNightPair(
-            pair,
-            key,
-            tag = TAG,
-            kind = "gradient",
-            expected = "a CSS gradient string",
-            parseSide = { side -> (side as? String)?.takeIf { it.isNotBlank() } },
-            combine = { day, night -> if (isNightMode) night else day },
-        )
+    ): String? {
+        val day = (pair["day"] as? String)?.takeIf { it.isNotBlank() }
+        val night = (pair["night"] as? String)?.takeIf { it.isNotBlank() }
+        if (day != null && night != null) return if (isNightMode) night else day
+
+        val side = if (day == null) "day" else "night"
+        val value = pair[side]
+        val got =
+            when {
+                side !in pair -> "nothing"
+                value is String -> "\"$value\""
+                else -> value.toString()
+            }
+        Log.w(TAG, "Ignoring invalid gradient pair for $key: $side must be a CSS gradient string, got $got")
+        return null
+    }
 
     private fun parseLinear(value: String): BackgroundImageValue? {
         val content = extractContent(value, "linear-gradient(") ?: return null

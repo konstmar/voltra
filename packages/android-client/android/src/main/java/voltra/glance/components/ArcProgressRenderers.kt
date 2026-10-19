@@ -174,8 +174,7 @@ private fun resolveArgb(
 ): Int? = JSColorParser.parse(value, key)?.resolveColor(context)?.toArgb()
 
 /**
- * Resolves the gradient color list, picking each `{ day, night }` entry's side by the scheme. An
- * entry that cannot be parsed drops the whole gradient, so the arc falls back to the solid `color`
+ * An entry that cannot be parsed drops the whole gradient, so the arc falls back to the solid `color`
  * instead of silently rendering different stops.
  */
 @Composable

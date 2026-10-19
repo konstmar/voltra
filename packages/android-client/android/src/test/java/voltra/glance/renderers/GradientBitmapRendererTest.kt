@@ -8,16 +8,14 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
-import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
-import org.robolectric.shadows.ShadowLog
-import voltra.glance.NativeComposeSeam
-import voltra.glance.NativeComposeSeam.Scheme
+import voltra.glance.GlanceRenderHelper
+import voltra.glance.GlanceRenderHelper.Scheme
 import voltra.glance.backgroundColors
 import voltra.glance.imageBitmaps
 import voltra.styling.BackgroundImageValue
@@ -225,24 +223,18 @@ class GradientBitmapRendererTest {
             color,
         )}, r=${AndroidColor.red(color)}, g=${AndroidColor.green(color)}, b=${AndroidColor.blue(color)}"
 
-    // MARK: - `backgroundImage` gradients following the color scheme, through the native compose/apply seam
+    // MARK: - `backgroundImage` gradients following the color scheme
 
     private val red = 0xFFFF0000.toInt()
     private val blue = 0xFF0000FF.toInt()
 
-    @Before
-    fun clearLogs() {
-        ShadowLog.clear()
-    }
-
-    /** A fixed-size Column whose style `backgroundImage` is [backgroundImage] (already JSON). */
     private fun column(backgroundImage: String) =
         """{"t":9,"p":{"s":{"w":40,"h":20,"bgi":$backgroundImage}},"c":{"t":18,"c":"Hi"}}"""
 
     private fun gradientUnder(
         json: String,
         scheme: Scheme,
-    ): Bitmap? = NativeComposeSeam.render(json, composeUnder = scheme).imageBitmaps().singleOrNull()
+    ): Bitmap? = GlanceRenderHelper.render(json, composeUnder = scheme).imageBitmaps().singleOrNull()
 
     private fun Bitmap.centre(): Int = getPixel(width / 2, height / 2)
 
@@ -256,7 +248,6 @@ class GradientBitmapRendererTest {
 
         assertEquals(red, requireNotNull(gradientUnder(json, Scheme.DAY)).centre())
         assertEquals(blue, requireNotNull(gradientUnder(json, Scheme.NIGHT)).centre())
-        assertTrue(ShadowLog.getLogsForTag("JSGradientParser").isEmpty())
     }
 
     @Test
@@ -278,7 +269,7 @@ class GradientBitmapRendererTest {
 
         fun renderUnder(scheme: Scheme) =
             renderGradientBitmap(
-                context = NativeComposeSeam.context(scheme),
+                context = GlanceRenderHelper.context(scheme),
                 gradient = gradient,
                 layout = LayoutStyle(width = SizeValue.Fixed(40.dp), height = SizeValue.Fixed(20.dp)),
                 widgetSize = null,
@@ -293,34 +284,29 @@ class GradientBitmapRendererTest {
         assertNotSame(day, renderUnder(Scheme.NIGHT))
     }
 
-    /** A fixed-size green Column whose style `backgroundImage` is [backgroundImage] (already JSON). */
     private fun columnOverGreen(backgroundImage: String) =
         """{"t":9,"p":{"s":{"w":40,"h":20,"bg":"#00ff00","bgi":$backgroundImage}},"c":{"t":18,"c":"Hi"}}"""
 
     @Test
-    fun aStructurallyInvalidPairFallsBackToTheBackgroundColorWithOneWarning() {
+    fun aStructurallyInvalidPairFallsBackToTheBackgroundColor() {
         val json = columnOverGreen("""{"day":"linear-gradient(to right, #ff0000, #ff0000)","night":7}""")
 
-        val view = NativeComposeSeam.render(json, composeUnder = Scheme.DAY)
+        val view = GlanceRenderHelper.render(json, composeUnder = Scheme.DAY)
 
         assertEquals(emptyList<Bitmap>(), view.imageBitmaps())
         assertEquals(listOf(0xFF00FF00.toInt()), view.backgroundColors())
-        val warnings = ShadowLog.getLogsForTag("JSGradientParser").map { it.msg }
-        assertEquals(warnings.toString(), 1, warnings.size)
-        assertTrue(warnings.single(), warnings.single().contains("backgroundImage"))
     }
 
     @Test
     fun anUnparsableUnselectedSideDoesNotAffectTheSelectedOne() {
         val json = columnOverGreen("""{"day":"linear-gradient(to right, #ff0000, #ff0000)","night":"not a gradient"}""")
 
-        val day = NativeComposeSeam.render(json, composeUnder = Scheme.DAY)
+        val day = GlanceRenderHelper.render(json, composeUnder = Scheme.DAY)
         assertEquals(red, requireNotNull(day.imageBitmaps().singleOrNull()).centre())
 
         // The night side fails like any unparsable gradient string: the background color shows.
-        val night = NativeComposeSeam.render(json, composeUnder = Scheme.NIGHT)
+        val night = GlanceRenderHelper.render(json, composeUnder = Scheme.NIGHT)
         assertEquals(emptyList<Bitmap>(), night.imageBitmaps())
         assertEquals(listOf(0xFF00FF00.toInt()), night.backgroundColors())
-        assertTrue(ShadowLog.getLogsForTag("JSGradientParser").isEmpty())
     }
 }

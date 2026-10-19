@@ -39,10 +39,6 @@ fun resolveAndApplyStyle(
     return ResolvedStyle(styledModifier.applyNativeModifiers(element), compositeStyle)
 }
 
-/**
- * The element's style values alone, without building modifiers. A `{ day, night }`
- * `backgroundImage` pair is narrowed to the side for the composing context's color scheme.
- */
 @Composable
 fun resolveElementStyle(
     element: VoltraElement,

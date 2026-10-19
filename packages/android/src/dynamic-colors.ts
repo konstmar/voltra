@@ -37,10 +37,7 @@ export type AndroidDynamicColorToken = (typeof AndroidDynamicColors)[AndroidDyna
  */
 export type StaticColor<Color extends string> = Color extends AndroidDynamicColorToken ? never : Color
 
-/**
- * A pair of static colors for light and dark mode. `AndroidDynamicColors` tokens are not accepted
- * on either side.
- */
+/** A pair of static colors for light and dark mode. */
 export type AndroidColorPair<Day extends string = string, Night extends string = string> = {
   /** Static color used in light mode. `AndroidDynamicColors` tokens are not accepted. */
   day: StaticColor<Day>

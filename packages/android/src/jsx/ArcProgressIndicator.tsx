@@ -3,10 +3,7 @@ import { createVoltraComponent } from './createVoltraComponent.js'
 import type { AndroidArcProgressIndicatorProps as GeneratedArcProgressIndicatorProps } from './props/AndroidArcProgressIndicator.js'
 
 export type ArcProgressIndicatorProps = Omit<GeneratedArcProgressIndicatorProps, 'gradientColors'> & {
-  /**
-   * Sweep gradient colors along the filled arc, from `startAngle`. Overrides `color`. Each entry is a color string,
-   * a dynamic color token or a `{ day, night }` pair.
-   */
+  /** Sweep gradient colors along the filled arc, from `startAngle`. Overrides `color`. */
   gradientColors?: AndroidColorValue[]
 }
 

@@ -15,19 +15,19 @@ object JSColorParser {
      * Supports: hex (#RGB, #RRGGBB, #RRGGBBAA), rgb/rgba, hsl/hsla, named colors, theme role
      * tokens, and `{ day, night }` pairs of literal colors.
      *
-     * @param key the style key or prop the value came from, named in the warning for an invalid pair.
+     * @param logKey the style key or prop the value came from, named in the warning for an invalid pair.
      */
     fun parse(
         value: Any?,
-        key: String? = null,
+        logKey: String? = null,
     ): VoltraColorValue? {
-        if (value is Map<*, *>) return parsePair(value, key)
+        if (value is Map<*, *>) return parsePair(value, logKey)
 
         val string = value?.toString()?.trim()?.lowercase() ?: return null
 
         if (string.isEmpty()) return null
 
-        return parseString(string, warn = true)
+        return parseString(string)
     }
 
     /**
@@ -36,49 +36,69 @@ object JSColorParser {
      */
     private fun parsePair(
         pair: Map<*, *>,
-        key: String?,
-    ): VoltraColorValue.DayNight? =
-        parseDayNightPair(
-            pair,
-            key,
-            tag = TAG,
-            kind = "color",
-            expected = "a literal color string",
-            parseSide = ::parsePairSide,
-            combine = VoltraColorValue::DayNight,
-        )
+        logKey: String?,
+    ): VoltraColorValue.DayNight? {
+        val missing = listOf("day", "night").firstOrNull { it !in pair }
+        if (missing != null) {
+            val forKey = logKey?.let { " for $it" } ?: ""
+            Log.w(TAG, "Ignoring invalid color pair$forKey: $missing must be a literal color string, got nothing")
+            return null
+        }
 
-    private fun parsePairSide(value: Any?): Color? {
-        val string = (value as? String)?.trim()?.lowercase()?.takeIf { it.isNotEmpty() } ?: return null
-        return (parseString(string, warn = false) as? VoltraColorValue.Static)?.color
+        val day = parsePairSide(pair, "day", logKey) ?: return null
+        val night = parsePairSide(pair, "night", logKey) ?: return null
+        return VoltraColorValue.DayNight(day, night)
     }
 
-    private fun parseString(
-        string: String,
-        warn: Boolean,
-    ): VoltraColorValue? {
+    private fun parsePairSide(
+        pair: Map<*, *>,
+        side: String,
+        logKey: String?,
+    ): Color? {
+        val forKey = logKey?.let { " for $it" } ?: ""
+        val value = pair[side]
+        if (value !is String) {
+            Log.w(TAG, "Ignoring invalid color pair$forKey: $side must be a literal color string, got $value")
+            return null
+        }
+
+        val string = value.trim().lowercase()
+        if (string.isEmpty()) {
+            Log.w(TAG, "Ignoring invalid color pair$forKey: $side must be a literal color string, got \"$value\"")
+            return null
+        }
+
+        val color = parseString(string) as? VoltraColorValue.Static
+        if (color == null) {
+            Log.w(TAG, "Ignoring invalid color pair$forKey: $side must be a literal color string, got \"$value\"")
+            return null
+        }
+        return color.color
+    }
+
+    private fun parseString(string: String): VoltraColorValue? {
         VoltraThemeColorRole.fromToken(string)?.let { role ->
             return VoltraColorValue.Dynamic(role)
         }
 
         // 1. Hex colors (with or without #)
         if (string.startsWith("#")) {
-            return parseHex(string, warn)?.let { VoltraColorValue.Static(it) }
+            return parseHex(string)?.let { VoltraColorValue.Static(it) }
         }
 
         // Check for hex without # prefix (6 or 8 hex digits)
         if (isHexColor(string)) {
-            return parseHex("#$string", warn)?.let { VoltraColorValue.Static(it) }
+            return parseHex("#$string")?.let { VoltraColorValue.Static(it) }
         }
 
         // 2. RGB/RGBA
         if (string.startsWith("rgb")) {
-            return parseRGB(string, warn)?.let { VoltraColorValue.Static(it) }
+            return parseRGB(string)?.let { VoltraColorValue.Static(it) }
         }
 
         // 3. HSL/HSLA
         if (string.startsWith("hsl")) {
-            return parseHSL(string, warn)?.let { VoltraColorValue.Static(it) }
+            return parseHSL(string)?.let { VoltraColorValue.Static(it) }
         }
 
         // 4. Named colors
@@ -96,10 +116,7 @@ object JSColorParser {
     /**
      * Parse hex color: #RGB, #RGBA, #RRGGBB, #RRGGBBAA
      */
-    private fun parseHex(
-        hex: String,
-        warn: Boolean,
-    ): Color? {
+    private fun parseHex(hex: String): Color? {
         return try {
             val hexSanitized = hex.removePrefix("#")
             val length = hexSanitized.length
@@ -150,7 +167,7 @@ object JSColorParser {
                 alpha = a.toFloat(),
             )
         } catch (e: Exception) {
-            if (warn) Log.w(TAG, "Failed to parse hex color: $hex", e)
+            Log.w(TAG, "Failed to parse hex color: $hex", e)
             null
         }
     }
@@ -160,10 +177,7 @@ object JSColorParser {
      * - rgb(255, 0, 0), rgba(255, 0, 0, 0.5)
      * - rgb(255 0 0 / 80%), rgba(255 0 0 / 0.8)
      */
-    private fun parseRGB(
-        string: String,
-        warn: Boolean,
-    ): Color? {
+    private fun parseRGB(string: String): Color? {
         return try {
             val function = parseFunctionCall(string, setOf("rgb", "rgba")) ?: return null
             val parsed =
@@ -180,7 +194,7 @@ object JSColorParser {
                 alpha = parsed.a.toFloat(),
             )
         } catch (e: Exception) {
-            if (warn) Log.w(TAG, "Failed to parse RGB color: $string", e)
+            Log.w(TAG, "Failed to parse RGB color: $string", e)
             null
         }
     }
@@ -190,10 +204,7 @@ object JSColorParser {
      * - hsl(120, 100%, 50%), hsla(120, 100%, 50%, 0.5)
      * - hsl(120 100% 50% / 30%), hsla(120 100% 50% / 0.3)
      */
-    private fun parseHSL(
-        string: String,
-        warn: Boolean,
-    ): Color? {
+    private fun parseHSL(string: String): Color? {
         return try {
             val function = parseFunctionCall(string, setOf("hsl", "hsla")) ?: return null
             val parsed =
@@ -212,7 +223,7 @@ object JSColorParser {
                 alpha = parsed.a.toFloat(),
             )
         } catch (e: Exception) {
-            if (warn) Log.w(TAG, "Failed to parse HSL color: $string", e)
+            Log.w(TAG, "Failed to parse HSL color: $string", e)
             null
         }
     }

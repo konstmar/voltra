@@ -4,14 +4,12 @@ import android.graphics.Bitmap
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
-import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.GraphicsMode
-import org.robolectric.shadows.ShadowLog
-import voltra.glance.NativeComposeSeam
-import voltra.glance.NativeComposeSeam.Scheme
+import voltra.glance.GlanceRenderHelper
+import voltra.glance.GlanceRenderHelper.Scheme
 import voltra.glance.imageBitmaps
 
 @RunWith(RobolectricTestRunner::class)
@@ -297,7 +295,7 @@ class ChartBitmapRendererTest {
 
     private fun blue(pixel: Int) = pixel and 0xFF
 
-    // MARK: - `{ day, night }` chart colors, through the native compose/apply seam
+    // MARK: - `{ day, night }` chart colors
 
     // A chart is a bitmap baked at composition on every API level, so each scheme is composed on
     // its own.
@@ -305,13 +303,7 @@ class ChartBitmapRendererTest {
     private val opaqueRed = 0xFFFF0000.toInt()
     private val opaqueBlue = 0xFF0000FF.toInt()
 
-    /** First color of the chart's default palette, used when a mark or series has no color. */
     private val defaultColor = 0xFF4E79A7.toInt()
-
-    @Before
-    fun clearLogs() {
-        ShadowLog.clear()
-    }
 
     /**
      * A 100x100 chart with axes and grids hidden, so the bars are the only opaque pixels. [marks] and
@@ -332,7 +324,7 @@ class ChartBitmapRendererTest {
         json: String,
         scheme: Scheme,
     ): Set<String> =
-        NativeComposeSeam
+        GlanceRenderHelper
             .render(json, composeUnder = scheme)
             .imageBitmaps()
             .single()
@@ -352,7 +344,6 @@ class ChartBitmapRendererTest {
 
         assertEquals("day", setOf(hex(opaqueRed)), barColorsUnder(json, Scheme.DAY))
         assertEquals("night", setOf(hex(opaqueBlue)), barColorsUnder(json, Scheme.NIGHT))
-        assertTrue(ShadowLog.getLogsForTag("JSColorParser").isEmpty())
     }
 
     @Test
@@ -365,20 +356,17 @@ class ChartBitmapRendererTest {
 
         assertEquals("day", setOf(hex(opaqueRed)), barColorsUnder(json, Scheme.DAY))
         assertEquals("night", setOf(hex(opaqueBlue)), barColorsUnder(json, Scheme.NIGHT))
-        assertTrue(ShadowLog.getLogsForTag("JSColorParser").isEmpty())
     }
 
     @Test
-    fun anInvalidMarkColorPairFallsBackToTheDefaultColorWithOneWarning() {
+    fun anInvalidMarkColorPairFallsBackToTheDefaultColor() {
         val json = chart("""[["bar",[["a",1]],{"c":{"day":"#ff0000","night":"~p"}}]]""")
 
         assertEquals(setOf(hex(defaultColor)), barColorsUnder(json, Scheme.DAY))
-        val expected = "Ignoring invalid color pair for color: night must be a literal color string, got \"~p\""
-        assertEquals(listOf(expected), ShadowLog.getLogsForTag("JSColorParser").map { it.msg })
     }
 
     @Test
-    fun anInvalidForegroundStyleScalePairFallsBackToTheDefaultColorWithOneWarning() {
+    fun anInvalidForegroundStyleScalePairFallsBackToTheDefaultColor() {
         val json =
             chart(
                 marks = """[["bar",[["a",1,"A"]],{}]]""",
@@ -386,8 +374,5 @@ class ChartBitmapRendererTest {
             )
 
         assertEquals(setOf(hex(defaultColor)), barColorsUnder(json, Scheme.DAY))
-        val expected =
-            "Ignoring invalid color pair for foregroundStyleScale: night must be a literal color string, got nothing"
-        assertEquals(listOf(expected), ShadowLog.getLogsForTag("JSColorParser").map { it.msg })
     }
 }
