@@ -5,7 +5,7 @@ description: "Use AndroidDynamicColors semantic tokens so widgets follow the Mat
 
 Voltra supports Android dynamic colors through semantic tokens exposed from `@use-voltra/android`.
 
-Each token names a color role, such as `primary` or `surface`, and Android resolves it through the widget's theme when the widget is drawn. By default that theme is the system's Material You palette on Android 12 and later, so widgets pick up wallpaper and light or dark changes without waiting for JavaScript to run again. A Dynamic Widget can also bring [its own theme](#theming-a-dynamic-widget).
+Each token names a color role, such as `primary` or `surface`, and resolves through the widget's theme. By default that is the Material You palette on Android 12 and later, so widgets pick up wallpaper and light or dark changes without waiting for JavaScript to run again. A Dynamic Widget can also bring [its own theme](#theming-a-dynamic-widget).
 
 ## Importing dynamic colors
 
@@ -92,7 +92,6 @@ You can use `AndroidDynamicColors.*` anywhere Android accepts a color value, inc
 - switch, checkbox, and radio button colors
 - progress indicator colors
 - chart mark colors
-- native modifiers such as `background(AndroidDynamicColors.surface)`
 
 ## Theming a Dynamic Widget
 
@@ -118,12 +117,11 @@ export default function OrderWidget() {
 
 The widget keeps using the same `AndroidDynamicColors.*` tokens; the theme only changes what they resolve to.
 
-- The keys of `day` and `night` are the role names [listed above](#importing-dynamic-colors). The `AndroidThemeColorRole` type names them.
+- The keys of `day` and `night` are the role names [listed above](#importing-dynamic-colors).
 - Values are literal colors: hex, `rgb()`/`rgba()`, `hsl()`/`hsla()` or color names. Tokens and `{ day, night }` pairs are not allowed inside a theme.
 - A role is themed only when it has a color on both sides. Roles you leave out keep the colors they would have without a theme.
 - Android picks the `day` or `night` side to match the system's light or dark setting, as it does for a [`{ day, night }` pair](/android/development/styling#day-and-night-colors).
-- A theme mistake never blanks the widget. A `theme` that is not an object with `day` and `night` objects is ignored, and the widget renders with the default palette. A role with a color on one side only, or a value that is not a literal color, is left out. Each problem logs one warning in Logcat under the `DynamicWidgetTheme` tag. Expect it about once per evaluation, and once for each size the launcher draws.
-- In development, a theme change applies once Metro serves the edited widget and the widget evaluates its bundle again, the same as any other change to the widget's JavaScript.
+- An invalid theme or role is skipped with a warning in Logcat under the `DynamicWidgetTheme` tag, so the widget still renders.
 
 ### Theme or system palette
 
@@ -140,14 +138,14 @@ export const theme: AndroidWidgetTheme = {
 | Situation | Android 12+ | Android 11 and older |
 | --- | --- | --- |
 | No `theme` export | System palette | Material baseline colors |
-| `theme`, `dynamicColors` omitted or `true` | System palette; the theme is ignored | The theme's role, if it has both sides; otherwise the baseline color |
-| `theme`, `dynamicColors: false` | The theme's role, if it has both sides; otherwise the system palette | The theme's role, if it has both sides; otherwise the baseline color |
+| `theme`, `dynamicColors` omitted or `true` | System palette | Theme, then baseline colors |
+| `theme`, `dynamicColors: false` | Theme, then system palette | Theme, then baseline colors |
 
 Literal colors and `{ day, night }` pairs on styles and props are always used as written. Only tokens go through the theme.
 
 ### Limitations
 
-- The pre-rendered first view from `initialStatePath` cannot see the theme. Tokens in it resolve through the default palette until the widget renders live. `{ day, night }` pairs in it resolve correctly, so use pairs where the first view's exact colors matter.
+- The pre-rendered `initialStatePath` view ignores the theme. Use `{ day, night }` pairs there if its colors matter.
 - Only Dynamic Widgets read `theme`. Payload-driven widgets, including server-rendered ones, keep using the default palette.
 
 ## Server-driven widgets

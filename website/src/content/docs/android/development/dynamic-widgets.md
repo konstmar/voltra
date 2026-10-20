@@ -236,9 +236,9 @@ Dynamic Widget props are app-owned state passed as the entry component's first a
 
 ## Colors in light and dark
 
-Give colors as `AndroidDynamicColors` tokens or as [`{ day, night }` pairs](/android/development/styling#day-and-night-colors), not by branching on `env.colorScheme`. Android resolves tokens and pairs when it draws the widget, so they follow the system's light or dark setting without running your JavaScript again. On Android 12 and later the launcher switches them itself, even while your app is not running.
+Give colors as `AndroidDynamicColors` tokens or [`{ day, night }` pairs](/android/development/styling#day-and-night-colors) rather than branching on `env.colorScheme`. They follow the system's light or dark setting without running your JavaScript again, and on Android 12 and later the launcher switches them even while your app is not running.
 
-`env.colorScheme` is only as current as the widget's last render, so a color chosen from it can lag behind the system setting. Use it only when the layout itself changes with the scheme, such as showing a different image. See [#263](https://github.com/callstackincubator/voltra/issues/263) for how Dynamic Widgets re-render on a scheme change.
+Use `env.colorScheme` only when the layout itself changes with the scheme, such as showing a different image. It is only as current as the widget's last render.
 
 ## Localization
 
@@ -249,5 +249,5 @@ Pass `env.locale` and `env.hourCycle` to every `Intl` and `toLocale*` call, and 
 - There is no `export` field in app.json for Dynamic Widgets.
 - The default-exported Dynamic Widget function or component name does not need to match the widget `id`.
 - Use a real device to verify release rendering.
-- `initialStatePath` gives the Dynamic Widget a pre-rendered first view. That view does not use the module's `theme`.
+- `initialStatePath` gives the Dynamic Widget a pre-rendered first view.
 - To use Glance modifiers that `style` does not cover, such as `semantics` or `appWidgetBackground`, see [Native modifiers](/android/development/native-modifiers).
