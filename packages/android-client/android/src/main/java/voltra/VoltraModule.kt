@@ -32,6 +32,8 @@ import voltra.dynamicwidget.DynamicWidgetUpdateRejection
 import voltra.dynamicwidget.DynamicWidgetUpdateTrigger
 import voltra.dynamicwidget.DynamicWidgetUpdater
 import voltra.dynamicwidget.VoltraConfigurationStore
+import voltra.dynamicwidget.WidgetPlacementSize
+import voltra.dynamicwidget.lifecycle.DynamicWidgetPlacementRegistry
 import voltra.dynamicwidget.serverupdate.DynamicWidgetServerUpdateScheduler
 import voltra.dynamicwidget.triggerDynamicWidgetConfigurationGlanceUpdate
 import voltra.dynamicwidget.triggerDynamicWidgetGlanceUpdate
@@ -188,6 +190,11 @@ class VoltraModule(
             VoltraEventBus.subscribe {
                 emitOnEventsAvailable(Arguments.createMap().apply { putString("type", "eventsAvailable") })
             }
+        try {
+            DynamicWidgetPlacementRegistry(reactApplicationContext).seedIfNeeded()
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to seed the Dynamic Widget placement registry", e)
+        }
     }
 
     override fun invalidate() {
@@ -1115,9 +1122,7 @@ class VoltraModule(
         for (providerInfo in installedProviders) {
             val ids = manager.getAppWidgetIds(providerInfo.provider)
             for (id in ids) {
-                val opts = manager.getAppWidgetOptions(id)
-                val minWidth = opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH)
-                val minHeight = opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT)
+                val size = WidgetPlacementSize.fromOptions(manager.getAppWidgetOptions(id))
                 val shortClassName = providerInfo.provider.shortClassName
                 val widgetType =
                     widgetIdsByComponent[providerInfo.provider]
@@ -1137,8 +1142,7 @@ class VoltraModule(
                         putInt("widgetId", id)
                         putString("providerClassName", shortClassName)
                         putString("label", providerInfo.loadLabel(reactApplicationContext.packageManager).toString())
-                        putInt("width", minWidth)
-                        putInt("height", minHeight)
+                        size.writeTo(this)
                     },
                 )
             }

@@ -33,6 +33,11 @@ export type VoltraWidgetPlacementWithSize = VoltraWidgetPlacement & {
   width: number
   /** Minimum height option in dp, as reported by the system */
   height: number
+  /**
+   * Sizes in dp the launcher may show this placement at: the launcher's own list on Android 12+,
+   * otherwise a portrait and a landscape estimate from the min/max bounds.
+   */
+  sizes: VoltraWidgetPlacementSize[]
 }
 
 /**
